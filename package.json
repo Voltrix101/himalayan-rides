@@ -1,8 +1,29 @@
 {
-  "name": "vite-react-typescript-starter",
-  "private": true,
-  "version": "0.0.0",
+  "name": "himalayan-rides",
+  "private": false,
+  "version": "1.0.0",
+  "description": "Modern adventure booking platform for Himalayan tours, vehicles, and experiences",
   "type": "module",
+  "keywords": [
+    "react",
+    "typescript",
+    "firebase",
+    "booking",
+    "adventure",
+    "tours",
+    "himalayas",
+    "travel"
+  ],
+  "author": "Voltrix101",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Voltrix101/himalayan-rides.git"
+  },
+  "homepage": "https://github.com/Voltrix101/himalayan-rides",
+  "bugs": {
+    "url": "https://github.com/Voltrix101/himalayan-rides/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
