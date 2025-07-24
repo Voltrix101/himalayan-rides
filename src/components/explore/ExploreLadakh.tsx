@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
   Mountain, 
   Camera, 
-  MapPin, 
   Star, 
   Clock, 
   Thermometer,
@@ -14,40 +13,15 @@ import {
   Users,
   Heart,
   Play,
-  ChevronRight,
-  ChevronDown,
-  ChevronUp,
-  Info,
-  Route,
   Navigation
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../hooks/useAuth';
+import { useApp } from '../../context/AppContext';
 import { GlassCard } from '../ui/GlassCard';
 import { Button } from '../ui/Button';
 import { ExperienceBookingModal } from '../booking/ExperienceBookingModal';
 import { BikeTourCard } from '../tours/BikeTourCard';
-import { bikeTourPlans } from '../../data/mockData';
-
-interface Destination {
-  id: string;
-  name: string;
-  description: string;
-  image: string;
-  altitude: string;
-  bestTime: string;
-  difficulty: 'Easy' | 'Moderate' | 'Challenging';
-  highlights: string[];
-  distance: string;
-  detailedInfo: {
-    overview: string;
-    howToReach: string;
-    thingsToDo: string[];
-    accommodation: string;
-    tips: string[];
-    videoUrl: string;
-  };
-}
+import { GlassExploreCard } from './GlassExploreCard';
 
 interface Experience {
   id: string;
@@ -59,123 +33,6 @@ interface Experience {
   rating: number;
   category: 'Adventure' | 'Cultural' | 'Spiritual' | 'Photography';
 }
-
-const destinations: Destination[] = [
-  {
-    id: 'pangong',
-    name: 'Pangong Tso',
-    description: 'A high-altitude lake that changes colors throughout the day, stretching across India and China.',
-    image: 'https://images.pexels.com/photos/1049298/pexels-photo-1049298.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    altitude: '4,350m',
-    bestTime: 'May - September',
-    difficulty: 'Moderate',
-    highlights: ['Color-changing waters', 'Bollywood filming location', 'Camping under stars'],
-    distance: '160km from Leh',
-    detailedInfo: {
-      overview: 'Pangong Tso, meaning "high grassland lake" in Tibetan, is one of the most spectacular high-altitude lakes in the world. Stretching 134 km long, with two-thirds lying in Tibet, this brackish water lake is famous for its ever-changing hues from azure blue to light blue to green and grey.',
-      howToReach: 'Drive from Leh via Chang La Pass (5,360m). The journey takes 5-6 hours through some of the most scenic mountain roads. Road conditions can be challenging, especially during monsoon.',
-      thingsToDo: ['Photography at different times of day', 'Camping by the lakeside', 'Visit nearby Spangmik village', 'Explore the Indo-China border area', 'Sunrise and sunset viewing'],
-      accommodation: 'Luxury camps, guesthouses in Spangmik village, and basic camping facilities available. Book in advance during peak season.',
-      tips: ['Carry warm clothes even in summer', 'Respect the fragile ecosystem', 'Carry sufficient water and snacks', 'Check weather conditions before travel', 'Permits required for certain areas'],
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    }
-  },
-  {
-    id: 'nubra',
-    name: 'Nubra Valley',
-    description: 'The valley of flowers with sand dunes, double-humped camels, and ancient monasteries.',
-    image: 'https://images.pexels.com/photos/2325446/pexels-photo-2325446.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    altitude: '3,048m',
-    bestTime: 'April - October',
-    difficulty: 'Easy',
-    highlights: ['Bactrian camels', 'Sand dunes', 'Diskit Monastery'],
-    distance: '120km from Leh',
-    detailedInfo: {
-      overview: 'Nubra Valley, known as the "Valley of Flowers," is a tri-armed valley located north of Leh. Famous for its sand dunes, double-humped Bactrian camels, and ancient monasteries, it offers a unique desert experience in the high Himalayas.',
-      howToReach: 'Accessible via Khardung La Pass, one of the highest motorable roads in the world. The drive from Leh takes 4-5 hours with spectacular mountain views.',
-      thingsToDo: ['Camel safari on sand dunes', 'Visit Diskit and Sumur monasteries', 'Explore Hunder village', 'Hot springs at Panamik', 'Trekking in Siachen base camp area'],
-      accommodation: 'Desert camps, guesthouses, and luxury resorts available in Hunder and Diskit. Camping under stars is a popular option.',
-      tips: ['Best visited between April-October', 'Carry layers for temperature variations', 'Book camel rides in advance', 'Respect local customs at monasteries', 'Stay hydrated at high altitude'],
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    }
-  },
-  {
-    id: 'khardungla',
-    name: 'Khardung La Pass',
-    description: 'One of the highest motorable passes in the world, gateway to Nubra Valley.',
-    image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    altitude: '5,359m',
-    bestTime: 'May - October',
-    difficulty: 'Challenging',
-    highlights: ['Highest motorable road', 'Panoramic views', 'Adventure milestone'],
-    distance: '39km from Leh',
-    detailedInfo: {
-      overview: 'Khardung La Pass, at 5,359 meters, is famously known as the "Gateway to Nubra Valley" and one of the highest motorable passes in the world. The pass offers breathtaking panoramic views of the surrounding peaks and valleys.',
-      howToReach: 'Well-maintained road from Leh, taking about 1.5-2 hours. The road is generally open from May to October, weather permitting.',
-      thingsToDo: ['Photography at the famous signboard', 'Panoramic mountain views', 'Visit the small cafe at the top', 'Acclimatization stop for Nubra Valley', 'Adventure biking milestone'],
-      accommodation: 'No accommodation at the pass itself. Stay in Leh or continue to Nubra Valley for overnight stays.',
-      tips: ['Spend minimal time due to altitude', 'Carry warm clothes and oxygen if needed', 'Check weather conditions', 'Avoid overexertion', 'Best visited early morning for clear views'],
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    }
-  },
-  {
-    id: 'tso-moriri',
-    name: 'Tso Moriri',
-    description: 'A pristine high-altitude lake surrounded by barren mountains and wildlife.',
-    image: 'https://images.pexels.com/photos/2325446/pexels-photo-2325446.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    altitude: '4,522m',
-    bestTime: 'June - September',
-    difficulty: 'Moderate',
-    highlights: ['Pristine wilderness', 'Wildlife sanctuary', 'Nomadic culture'],
-    distance: '240km from Leh',
-    detailedInfo: {
-      overview: 'Tso Moriri, meaning "Mountain Lake," is a pristine high-altitude lake in the Changthang plateau. Part of the Tso Moriri Wetland Conservation Reserve, it\'s home to diverse wildlife including the rare black-necked cranes.',
-      howToReach: 'Drive from Leh via Chumathang and Sumdo. The journey takes 6-7 hours through remote mountain terrain. Road conditions can be challenging.',
-      thingsToDo: ['Wildlife photography', 'Bird watching (black-necked cranes)', 'Visit Korzok village and monastery', 'Interact with Changpa nomads', 'Camping by the lake'],
-      accommodation: 'Basic guesthouses in Korzok village, camping sites by the lake. Limited facilities, so carry essentials.',
-      tips: ['Permits required for the area', 'Carry warm clothes and sleeping bags', 'Respect wildlife and environment', 'Limited medical facilities', 'Best for experienced travelers'],
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    }
-  },
-  {
-    id: 'umling-la',
-    name: 'Umling La Pass',
-    description: 'The world\'s highest motorable pass, a testament to human engineering at extreme altitude.',
-    image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    altitude: '5,798m',
-    bestTime: 'June - September',
-    difficulty: 'Challenging',
-    highlights: ['World\'s highest motorable pass', 'Extreme altitude adventure', 'Engineering marvel'],
-    distance: '230km from Leh',
-    detailedInfo: {
-      overview: 'Umling La Pass, at 5,798 meters, holds the Guinness World Record as the world\'s highest motorable pass. Located in the Demchok sector, this pass represents the pinnacle of high-altitude motoring adventure.',
-      howToReach: 'Accessible via Hanle and Demchok route. The journey requires special permits and is extremely challenging due to altitude and terrain. Only for experienced high-altitude travelers.',
-      thingsToDo: ['World record achievement', 'Extreme altitude photography', 'Visit border areas (with permits)', 'Experience ultimate adventure challenge', 'Witness engineering marvel'],
-      accommodation: 'No accommodation at the pass. Stay in Hanle or return to Leh same day. Camping possible but extremely challenging due to altitude.',
-      tips: ['Special permits mandatory', 'Carry oxygen and medical kit', 'Travel with experienced guides only', 'Check weather and road conditions', 'Not recommended for first-time visitors'],
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    }
-  },
-  {
-    id: 'hanle',
-    name: 'Hanle',
-    description: 'A remote village famous for its astronomical observatory and pristine dark skies.',
-    image: 'https://images.pexels.com/photos/1049298/pexels-photo-1049298.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    altitude: '4,500m',
-    bestTime: 'May - October',
-    difficulty: 'Moderate',
-    highlights: ['Indian Astronomical Observatory', 'Dark sky sanctuary', 'Remote border village'],
-    distance: '255km from Leh',
-    detailedInfo: {
-      overview: 'Hanle is a remote village in eastern Ladakh, home to the Indian Astronomical Observatory. Known for having one of the world\'s clearest skies, it offers unparalleled stargazing opportunities and insights into cutting-edge astronomy.',
-      howToReach: 'Drive from Leh via Chumathang and Loma. The journey takes 6-7 hours through remote terrain. Road conditions vary, and permits are required.',
-      thingsToDo: ['Visit the Astronomical Observatory', 'Stargazing and astrophotography', 'Explore Hanle Monastery', 'Experience remote village life', 'Photography of pristine landscapes'],
-      accommodation: 'Basic guesthouses and homestays in the village. Camping is possible but challenging due to altitude and weather conditions.',
-      tips: ['Inner Line Permits required', 'Carry warm clothes for night temperatures', 'Best for astronomy enthusiasts', 'Limited connectivity and facilities', 'Respect local customs and environment'],
-      videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ'
-    }
-  }
-];
 
 const experiences: Experience[] = [
   {
@@ -211,29 +68,18 @@ const experiences: Experience[] = [
 ];
 
 export function ExploreLadakh() {
-  const { state } = useApp();
   const { requireAuth } = useAuth();
-  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
-  const [expandedDestination, setExpandedDestination] = useState<string | null>(null);
+  const { state } = useApp();
   const [activeExperienceFilter, setActiveExperienceFilter] = useState<string>('All');
   const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showExperienceBooking, setShowExperienceBooking] = useState(false);
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 300], [0, 50]);
-  const y2 = useTransform(scrollY, [0, 300], [0, -50]);
 
   const filteredExperiences = activeExperienceFilter === 'All' 
     ? experiences 
     : experiences.filter(exp => exp.category === activeExperienceFilter);
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy': return 'text-green-400';
-      case 'Moderate': return 'text-yellow-400';
-      case 'Challenging': return 'text-red-400';
-      default: return 'text-white';
-    }
-  };
 
   const handleBookExperience = (experience: Experience) => {
     requireAuth(() => {
@@ -411,75 +257,36 @@ export function ExploreLadakh() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {destinations.map((destination, index) => (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {state.explorePlans.length > 0 ? (
+              state.explorePlans.slice(0, 6).map((plan, index) => (
+                <motion.div
+                  key={plan.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <GlassExploreCard
+                    id={plan.id}
+                    title={plan.title}
+                    description={plan.description}
+                    videoUrl={plan.videoURL}
+                    imageUrl={plan.coverImage}
+                    location={plan.difficulty || 'Ladakh'}
+                  />
+                </motion.div>
+              ))
+            ) : (
               <motion.div
-                key={destination.id}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="col-span-2 text-center py-16"
               >
-                <GlassCard className="overflow-hidden group cursor-pointer">
-                  <div className="relative h-64 overflow-hidden">
-                    <img
-                      src={destination.image}
-                      alt={destination.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    
-                    <div className="absolute top-4 right-4 flex gap-2">
-                      <div className="bg-white/20 backdrop-blur-md rounded-full px-3 py-1">
-                        <span className="text-white text-sm font-medium">{destination.altitude}</span>
-                      </div>
-                      <div className={`bg-white/20 backdrop-blur-md rounded-full px-3 py-1`}>
-                        <span className={`text-sm font-medium ${getDifficultyColor(destination.difficulty)}`}>
-                          {destination.difficulty}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-2xl font-bold text-white mb-2">{destination.name}</h3>
-                      <div className="flex items-center gap-2 text-white/80 text-sm">
-                        <MapPin className="w-4 h-4" />
-                        <span>{destination.distance}</span>
-                        <Clock className="w-4 h-4 ml-2" />
-                        <span>{destination.bestTime}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <p className="text-white/80 mb-4 leading-relaxed">{destination.description}</p>
-                    
-                    <div className="mb-4">
-                      <h4 className="text-white font-medium mb-2">Highlights:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {destination.highlights.map((highlight, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1 bg-white/10 rounded-full text-xs text-white/80"
-                          >
-                            {highlight}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Button 
-                      variant="glass" 
-                      className="w-full group"
-                      onClick={() => setSelectedDestination(destination)}
-                    >
-                      Explore {destination.name}
-                      <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </div>
-                </GlassCard>
+                <p className="text-white/60 text-lg">No explore plans available yet</p>
+                <p className="text-white/40 text-sm mt-2">Check back soon for new adventures!</p>
               </motion.div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -609,17 +416,28 @@ export function ExploreLadakh() {
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {bikeTourPlans.map((tour, index) => (
+            {state.bikeTours.length > 0 ? (
+              state.bikeTours.slice(0, 4).map((tour, index) => (
+                <motion.div
+                  key={tour.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.2 }}
+                >
+                  <BikeTourCard tour={tour} />
+                </motion.div>
+              ))
+            ) : (
               <motion.div
-                key={tour.id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="col-span-2 text-center py-16"
               >
-                <BikeTourCard tour={tour} />
+                <p className="text-white/60 text-lg">No bike tour plans available yet</p>
+                <p className="text-white/40 text-sm mt-2">Check back soon for new tour packages!</p>
               </motion.div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -661,11 +479,21 @@ export function ExploreLadakh() {
       </section>
 
       {/* Experience Booking Modal */}
+      {/* Booking Modals */}
       <ExperienceBookingModal
         experience={selectedExperience}
         isOpen={showBookingModal}
         onClose={() => {
           setShowBookingModal(false);
+          setSelectedExperience(null);
+        }}
+      />
+      
+      <ExperienceBookingModal
+        experience={selectedExperience}
+        isOpen={showExperienceBooking}
+        onClose={() => {
+          setShowExperienceBooking(false);
           setSelectedExperience(null);
         }}
       />

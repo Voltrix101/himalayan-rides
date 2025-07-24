@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Mountain, User, Menu, LogOut } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Button } from '../ui/Button';
+import '../../styles/adminButton.css'; // Add this import for the CSS
 
 interface HeaderProps {
   onAuthClick: () => void;
@@ -18,6 +19,12 @@ export function Header({ onAuthClick, onNavigate }: HeaderProps) {
   const handleLogout = () => {
     dispatch({ type: 'SET_USER', payload: null });
   };
+
+  // Helper: is admin
+  const isAdmin = state.user && (
+    state.user.email === 'amritob0327.roy@gmail.com' ||
+    state.user.email === 'amritoballavroy@gmail.com'
+  );
 
   return (
     <motion.header
@@ -38,6 +45,17 @@ export function Header({ onAuthClick, onNavigate }: HeaderProps) {
           >
             Explore
           </button>
+          {/* Admin Button next to Explore */}
+          {isAdmin && (
+            <button
+              className="admin-btn ml-2"
+              onClick={() => window.location.href = '/admin'}
+              style={{ position: 'relative' }}
+            >
+              🔥 Admin 🔥
+              <span className="comet-border"></span>
+            </button>
+          )}
           <button 
             onClick={() => onNavigate?.('fleet')} 
             className="text-white/80 hover:text-white transition-colors"

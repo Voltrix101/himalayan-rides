@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import { BikeTourPlan } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
@@ -62,49 +62,62 @@ export function BikeTourCard({ tour }: BikeTourCardProps) {
             </div>
           </div>
 
-          <button
-            onClick={() => setShowItinerary(!showItinerary)}
-            className="flex items-center justify-between w-full text-white/80 hover:text-white transition-colors mb-4"
-          >
-            <span className="font-medium">View Itinerary</span>
-            {showItinerary ? (
-              <ChevronUp className="w-4 h-4" />
-            ) : (
-              <ChevronDown className="w-4 h-4" />
-            )}
-          </button>
-
-          {showItinerary && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mb-4 space-y-3 max-h-60 overflow-y-auto"
-            >
-              {tour.itinerary.map((day, index) => (
-                <div key={index} className="bg-white/5 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs text-white font-bold">
-                      {day.day}
-                    </div>
-                    <h5 className="text-white font-medium text-sm">{day.title}</h5>
-                  </div>
-                  <p className="text-white/70 text-xs leading-relaxed pl-8">
-                    {day.description}
-                  </p>
-                </div>
-              ))}
-            </motion.div>
-          )}
-
           <Button
             onClick={handleBookTour}
-            className="w-full"
+            className="w-full mb-2"
           >
             Book This Tour
           </Button>
+          <Button
+            variant="glass"
+            onClick={() => setShowItinerary(true)}
+            className="w-full"
+          >
+            View Itinerary
+          </Button>
         </div>
       </GlassCard>
+
+      {/* Itinerary Modal */}
+      <AnimatePresence>
+        {showItinerary && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setShowItinerary(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-8 relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <button
+                className="absolute top-4 right-4 text-gray-400 hover:text-blue-500 text-xl font-bold"
+                onClick={() => setShowItinerary(false)}
+              >
+                ×
+              </button>
+              <h2 className="text-2xl font-bold text-blue-600 mb-6">Itinerary</h2>
+              <div className="space-y-6 max-h-[60vh] overflow-y-auto">
+                {tour.itinerary && tour.itinerary.length > 0 ? (
+                  tour.itinerary.map((day, idx) => (
+                    <div key={idx}>
+                      <div className="text-lg font-bold text-blue-600 mb-1">{day.title ? `Day ${day.day}: ${day.title}` : `Day ${day.day}`}</div>
+                      <div className="text-gray-700 text-sm whitespace-pre-line">{day.description}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-gray-400">No itinerary available.</div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <UniversalBookingModal
         isOpen={showBookingModal}

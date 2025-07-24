@@ -22,6 +22,8 @@ export interface Vehicle {
   seats?: number;
   features: string[];
   available: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface Booking {
@@ -61,4 +63,71 @@ export interface BikeTourPlan {
   price: number;
   highlights: string[];
   itinerary: TourItinerary[];
+  description?: string;
+  videoURL?: string;
+  tags?: string[];
+  coverImage?: string;
+  isFeatured?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+export interface TripPlan {
+  id: string;
+  title: string;
+  route: string[];
+  duration: string;
+  price: number;
+  description: string;
+  mapURL?: string;
+  coverImage: string;
+  isFeatured: boolean;
+  highlights: string[];
+  itinerary: TourItinerary[];
+  difficulty: 'Easy' | 'Moderate' | 'Challenging' | 'Expert';
+  bestSeason: string[];
+  groupSize: {
+    min: number;
+    max: number;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ExplorePlan {
+  id: string;
+  title: string;
+  description: string;
+  videoURL: string;
+  highlights: string[];
+  tags: string[];
+  coverImage: string;
+  duration?: string;
+  difficulty?: string;
+  bestTime?: string;
+  isFeatured: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Destination {
+  id: string;
+  title: string;
+  description: string;
+  highlights: string[];
+  coverImage: string;
+  isFeatured: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Experience {
+  id: string;
+  title: string;
+  description: string;
+  tags: string[];
+  coverImage: string;
+  isFeatured: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }

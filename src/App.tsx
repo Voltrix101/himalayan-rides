@@ -8,6 +8,7 @@ import { BookingModal } from './components/booking/BookingModal';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { ExploreLadakh } from './components/explore/ExploreLadakh';
 import { YourTrips } from './components/trips/YourTrips';
+import { AdminDashboard } from './components/admin/AdminDashboard';
 import { useAuth } from './hooks/useAuth';
 import { Vehicle } from './types';
 import { Toaster } from 'react-hot-toast';
@@ -20,6 +21,14 @@ function AppContent() {
   const [showBookingModal, setShowBookingModal] = useState(false);
 
   const backgroundImage = state.selectedRegion.image;
+
+  // Check if we're on the admin route
+  const isAdminRoute = window.location.pathname.startsWith('/admin');
+
+  // If admin route, render admin dashboard
+  if (isAdminRoute) {
+    return <AdminDashboard />;
+  }
 
   useEffect(() => {
     if (user && currentView === 'home') {

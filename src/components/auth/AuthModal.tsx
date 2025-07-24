@@ -4,6 +4,7 @@ import { X, Mail, Phone, User, MapPin, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../ui/Button';
 import { GlassCard } from '../ui/GlassCard';
+import { FirebaseForgotPasswordModal } from './FirebaseForgotPasswordModal';
 import toast from 'react-hot-toast';
 
 interface AuthModalProps {
@@ -17,6 +18,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,7 +26,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     phone: '',
     region: ''
   });
-  const { signIn, resetPassword, hideAuthModal, isLoading } = useAuth();
+  const { signIn, resetPassword } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -283,11 +285,11 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
               </Button>
             </form>
 
-            {!showForgotPassword && (
+            {!showForgotPassword && isLogin && (
               <div className="text-center mt-4">
                 <button
                   type="button"
-                  onClick={() => setShowForgotPassword(true)}
+                  onClick={() => setShowForgotModal(true)}
                   className="text-white/60 hover:text-white text-sm transition-colors"
                 >
                   Forgot your password?
@@ -322,6 +324,16 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
           </div>
         </motion.div>
       )}
+      
+      {/* Firebase Forgot Password Modal */}
+      <FirebaseForgotPasswordModal
+        isOpen={showForgotModal}
+        onClose={() => setShowForgotModal(false)}
+        onBackToLogin={() => {
+          setShowForgotModal(false);
+          // Modal will remain open for login
+        }}
+      />
     </AnimatePresence>
   );
 }
