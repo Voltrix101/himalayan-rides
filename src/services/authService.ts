@@ -5,15 +5,11 @@ import {
   updateProfile,
   onAuthStateChanged,
   sendPasswordResetEmail,
-<<<<<<< HEAD
   AuthErrorCodes,
   GoogleAuthProvider,
   signInWithPopup,
-=======
   confirmPasswordReset,
-  verifyPasswordResetCode,
-  AuthErrorCodes
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
+  verifyPasswordResetCode
 } from 'firebase/auth';
 import {
   doc,

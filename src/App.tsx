@@ -2,20 +2,9 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/layout/Header';
-<<<<<<< HEAD
 import { UniversalModal, ModalType } from './components/ui/UniversalModal';
 import { PerformanceDisplay } from './hooks/usePerformanceMonitor';
 import { optimizedFirestore } from './utils/firebaseOptimizer';
-=======
-import { AuthModal } from './components/auth/AuthModal';
-import { RegionSelector } from './components/home/RegionSelector';
-import { FleetView } from './components/fleet/FleetView';
-import { BookingModal } from './components/booking/BookingModal';
-import { Dashboard } from './components/dashboard/Dashboard';
-import { ExploreLadakh } from './components/explore/ExploreLadakh';
-import { YourTrips } from './components/trips/YourTrips';
-import { AdminDashboard } from './components/admin/AdminDashboard';
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 import { useAuth } from './hooks/useAuth';
 import { isCurrentUserAdmin } from './utils/adminUtils';
 import { AdminStatusIndicator } from './components/AdminStatusIndicator';
@@ -109,18 +98,7 @@ function AppContent() {
   // Get background image from selected region
   const backgroundImage = state.selectedRegion.image;
 
-<<<<<<< HEAD
   // Handle auth modal from useAuth
-=======
-  // Check if we're on the admin route
-  const isAdminRoute = window.location.pathname.startsWith('/admin');
-
-  // If admin route, render admin dashboard
-  if (isAdminRoute) {
-    return <AdminDashboard />;
-  }
-
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
   useEffect(() => {
     console.log('🎭 Auth modal state changed:', showAuthModal);
     if (showAuthModal) {
