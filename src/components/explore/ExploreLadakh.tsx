@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
   Mountain, 
@@ -28,6 +28,7 @@ import { Button } from '../ui/Button';
 import { ExperienceBookingModal } from '../booking/ExperienceBookingModal';
 import { BikeTourCard } from '../tours/BikeTourCard';
 import { bikeTourPlans } from '../../data/mockData';
+import { PerformanceMonitor } from '../../utils/performanceMonitor';
 
 interface Destination {
   id: string;
@@ -210,6 +211,52 @@ const experiences: Experience[] = [
   }
 ];
 
+// Performance-optimized image component with lazy loading
+const OptimizedImage = React.memo(({ src, alt, className, ...props }: {
+  src: string;
+  alt: string;
+  className?: string;
+  [key: string]: any;
+}) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  const handleLoad = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
+
+  const handleError = useCallback(() => {
+    setHasError(true);
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className={`${className} bg-gray-800 flex items-center justify-center`}>
+        <Mountain className="w-12 h-12 text-gray-600" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative">
+      {!isLoaded && (
+        <div className={`${className} bg-gray-800 animate-pulse flex items-center justify-center absolute inset-0`}>
+          <Mountain className="w-12 h-12 text-gray-600" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}
+        onLoad={handleLoad}
+        onError={handleError}
+        loading="lazy"
+        {...props}
+      />
+    </div>
+  );
+});
+
 export function ExploreLadakh() {
   const { state } = useApp();
   const { requireAuth } = useAuth();
@@ -222,25 +269,48 @@ export function ExploreLadakh() {
   const y1 = useTransform(scrollY, [0, 300], [0, 50]);
   const y2 = useTransform(scrollY, [0, 300], [0, -50]);
 
-  const filteredExperiences = activeExperienceFilter === 'All' 
-    ? experiences 
-    : experiences.filter(exp => exp.category === activeExperienceFilter);
+  // Memoize bike tours for performance
+  const memoizedBikeTours = useMemo(() => {
+    PerformanceMonitor.startProfile('memoize-bike-tours');
+    const result = bikeTourPlans;
+    PerformanceMonitor.endProfile('memoize-bike-tours');
+    return result;
+  }, []);
 
-  const getDifficultyColor = (difficulty: string) => {
+  // Performance monitoring
+  React.useEffect(() => {
+    PerformanceMonitor.startProfile('ExploreLadakh-render');
+    return () => {
+      PerformanceMonitor.endProfile('ExploreLadakh-render');
+    };
+  });
+
+  // Memoize filtered experiences for performance
+  const filteredExperiences = useMemo(() => {
+    PerformanceMonitor.startProfile('filter-experiences');
+    const result = activeExperienceFilter === 'All' 
+      ? experiences 
+      : experiences.filter(exp => exp.category === activeExperienceFilter);
+    PerformanceMonitor.endProfile('filter-experiences');
+    return result;
+  }, [activeExperienceFilter]);
+
+  // Memoize difficulty color calculation
+  const getDifficultyColor = useCallback((difficulty: string) => {
     switch (difficulty) {
       case 'Easy': return 'text-green-400';
       case 'Moderate': return 'text-yellow-400';
       case 'Challenging': return 'text-red-400';
       default: return 'text-white';
     }
-  };
+  }, []);
 
-  const handleBookExperience = (experience: Experience) => {
+  const handleBookExperience = useCallback((experience: Experience) => {
     requireAuth(() => {
       setSelectedExperience(experience);
       setShowBookingModal(true);
     });
-  };
+  }, [requireAuth]);
 
   return (
     <div className="min-h-screen pt-20">
@@ -422,7 +492,7 @@ export function ExploreLadakh() {
               >
                 <GlassCard className="overflow-hidden group cursor-pointer">
                   <div className="relative h-64 overflow-hidden">
-                    <img
+                    <OptimizedImage
                       src={destination.image}
                       alt={destination.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -531,7 +601,7 @@ export function ExploreLadakh() {
               >
                 <GlassCard className="overflow-hidden group">
                   <div className="relative h-48 overflow-hidden">
-                    <img
+                    <OptimizedImage
                       src={experience.image}
                       alt={experience.title}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -609,7 +679,7 @@ export function ExploreLadakh() {
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {bikeTourPlans.map((tour, index) => (
+            {memoizedBikeTours.map((tour, index) => (
               <motion.div
                 key={tour.id}
                 initial={{ opacity: 0, y: 50 }}

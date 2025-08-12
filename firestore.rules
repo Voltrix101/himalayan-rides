@@ -1,0 +1,117 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===== Helper functions =====
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    // Admin emails whitelist - only these emails have admin privileges
+    function isAdmin() {
+      return isAuthed() && request.auth.token.email in [
+        'amritob0327.roy@gmail.com',
+        'amritoballavroy@gmail.com'
+      ];
+    }
+
+    function isOwner(userId) {
+      return isAuthed() && request.auth.uid == userId;
+    }
+
+    // ===== Collections =====
+
+    // Users: owner read/write, admin full, create only for self
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Vehicles/Destinations/BikeTours/ExplorePlans/CuratedExperiences: public read, admin write
+    match /vehicles/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /destinations/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /bikeTours/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /explorePlans/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /curatedExperiences/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Bookings/Trips: owner read/write, admin full
+    match /bookings/{bookingId} {
+      allow read: if isAdmin() || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthed() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // Root trips collection used by the app
+    match /trips/{tripId} {
+      allow read: if isAdmin() || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthed() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // Nested user trips (if used): owner or admin
+    match /userTrips/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+      match /trips/{tripId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // Notifications: user can read own, create for self, admin can manage all
+    match /notifications/{notificationId} {
+      allow read: if isAdmin() || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow create: if isAdmin() || (isAuthed() && request.resource.data.userId == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    // Support tickets: user can create/read/update own, admin full
+    match /support/{ticketId} {
+      allow read: if isAdmin() || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthed() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdmin() || (isAuthed() && resource.data.userId == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    // Admin data: admin only
+    match /analytics/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /adminStats/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /revenue/{docId} {
+      allow read, write: if isAdmin();
+    }
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    // Config: public read, admin write
+    match /config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Fallback: deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,11 +1,13 @@
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signOut,
+  signOut as firebaseSignOut,
   updateProfile,
   onAuthStateChanged,
   sendPasswordResetEmail,
-  AuthErrorCodes
+  AuthErrorCodes,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import {
   doc,
@@ -194,11 +196,65 @@ class AuthService {
   // Sign out
   async signOut(): Promise<void> {
     try {
-      await signOut(auth);
+      await firebaseSignOut(auth);
       toast.success('Signed out successfully');
     } catch (error) {
       console.error('Error signing out:', error);
       throw new Error('Failed to sign out');
+    }
+  }
+
+  // Sign in with Google
+  async signInWithGoogle(): Promise<User> {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const firebaseUser = result.user;
+
+      // Check if user doc exists
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      const userDoc = await getDoc(userRef);
+
+      const defaultUserData = {
+        name: firebaseUser.displayName || 'Rider',
+        phone: firebaseUser.phoneNumber || '',
+        region: 'Ladakh',
+      };
+
+      if (!userDoc.exists()) {
+        // Create new user doc
+        await setDoc(userRef, {
+          id: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: defaultUserData.name,
+          phone: defaultUserData.phone,
+          region: defaultUserData.region,
+          createdAt: serverTimestamp(),
+          lastLoginAt: serverTimestamp(),
+        });
+      } else {
+        // Update last login
+        await setDoc(userRef, { lastLoginAt: serverTimestamp() }, { merge: true });
+      }
+
+      toast.success(`Welcome${firebaseUser.displayName ? `, ${firebaseUser.displayName}` : ''}!`);
+
+      return {
+        id: firebaseUser.uid,
+        email: firebaseUser.email || '',
+        name: firebaseUser.displayName || defaultUserData.name,
+        phone: defaultUserData.phone,
+        region: defaultUserData.region,
+        isAuthenticated: true,
+        lastLoginAt: new Date(),
+      };
+    } catch (error: any) {
+      // Ignore popup-closed errors gracefully
+      if (error?.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign-in popup closed');
+      }
+      console.error('Google sign-in error:', error);
+      throw new Error(error?.message || 'Failed to sign in with Google');
     }
   }
 

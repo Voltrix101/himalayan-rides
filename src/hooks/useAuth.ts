@@ -67,11 +67,20 @@ export function useAuth() {
   };
 
   const login = () => {
+    console.log('🔐 Login button clicked - showing auth modal');
     dispatch({ type: 'SHOW_AUTH_MODAL' });
   };
 
-  const logout = () => {
-    signOut();
+  const logout = async () => {
+    try {
+      // Immediately clear user state
+      dispatch({ type: 'SET_USER', payload: null });
+      // Then sign out from Firebase
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if Firebase signOut fails, keep user state cleared
+    }
   };
 
   return {

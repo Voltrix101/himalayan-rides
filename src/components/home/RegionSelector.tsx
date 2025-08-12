@@ -3,9 +3,11 @@ import { motion } from 'framer-motion';
 import { useApp } from '../../context/AppContext';
 import { regions } from '../../data/mockData';
 import { GlassCard } from '../ui/GlassCard';
+import { useAppNavigation } from '../../hooks/useAppNavigation';
 
 export function RegionSelector() {
   const { state, dispatch } = useApp();
+  const { navigateToExplore } = useAppNavigation();
 
   const handleRegionSelect = (region: typeof regions[0]) => {
     dispatch({ type: 'SET_REGION', payload: region });
@@ -55,8 +57,7 @@ export function RegionSelector() {
                     onClick={() => {
                       handleRegionSelect(region);
                       if (region.id === 'ladakh') {
-                        // Navigate to explore page for Ladakh
-                        window.dispatchEvent(new CustomEvent('navigateToExplore'));
+                        navigateToExplore();
                       }
                     }}
                     className={`w-full py-3 rounded-xl bg-gradient-to-r ${region.gradient} text-white font-medium hover:shadow-lg transition-all duration-300`}
