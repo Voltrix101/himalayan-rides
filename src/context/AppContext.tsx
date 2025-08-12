@@ -1,13 +1,17 @@
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { User, Vehicle, Booking, Region } from '../types';
-import { regions, vehicles } from '../data/mockData';
+import { User, Vehicle, Booking, Region, ExplorePlan, BikeTourPlan } from '../types';
+import { regions } from '../data/mockData';
 import { authService } from '../services/authService';
-import toast from 'react-hot-toast';
+import { vehiclesService } from '../services/vehiclesService';
+import { explorePlansService } from '../services/explorePlansService';
+import { bikeToursService } from '../services/bikeToursService';
 
 interface AppState {
   user: User | null;
   selectedRegion: Region;
   vehicles: Vehicle[];
+  explorePlans: ExplorePlan[];
+  bikeTours: BikeTourPlan[];
   bookings: Booking[];
   isLoading: boolean;
   showAuthModal: boolean;
@@ -17,6 +21,9 @@ interface AppState {
 type AppAction =
   | { type: 'SET_USER'; payload: User | null }
   | { type: 'SET_REGION'; payload: Region }
+  | { type: 'SET_VEHICLES'; payload: Vehicle[] }
+  | { type: 'SET_EXPLORE_PLANS'; payload: ExplorePlan[] }
+  | { type: 'SET_BIKE_TOURS'; payload: BikeTourPlan[] }
   | { type: 'ADD_BOOKING'; payload: Booking }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'UPDATE_USER'; payload: Partial<User> }
@@ -26,7 +33,9 @@ type AppAction =
 const initialState: AppState = {
   user: null,
   selectedRegion: regions[0],
-  vehicles,
+  vehicles: [],
+  explorePlans: [],
+  bikeTours: [],
   bookings: [],
   isLoading: true, // Start with loading while checking auth
   showAuthModal: false,
@@ -44,6 +53,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, user: action.payload };
     case 'SET_REGION':
       return { ...state, selectedRegion: action.payload };
+    case 'SET_VEHICLES':
+      return { ...state, vehicles: action.payload };
+    case 'SET_EXPLORE_PLANS':
+      return { ...state, explorePlans: action.payload };
+    case 'SET_BIKE_TOURS':
+      return { ...state, bikeTours: action.payload };
     case 'ADD_BOOKING':
       return { ...state, bookings: [...state.bookings, action.payload] };
     case 'SET_LOADING':
@@ -86,6 +101,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }).catch((error) => {
       console.error('Error getting current user:', error);
       dispatch({ type: 'SET_LOADING', payload: false });
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Subscribe to vehicles data from Firestore
+  useEffect(() => {
+    const unsubscribe = vehiclesService.subscribeToVehicles((vehicles) => {
+      dispatch({ type: 'SET_VEHICLES', payload: vehicles });
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Subscribe to explore plans data from Firestore
+  useEffect(() => {
+    const unsubscribe = explorePlansService.subscribeToExplorePlans((plans) => {
+      dispatch({ type: 'SET_EXPLORE_PLANS', payload: plans });
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // Subscribe to bike tours data from Firestore
+  useEffect(() => {
+    const unsubscribe = bikeToursService.subscribeToBikeTours((tours) => {
+      dispatch({ type: 'SET_BIKE_TOURS', payload: tours });
     });
 
     return unsubscribe;

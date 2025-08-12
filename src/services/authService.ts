@@ -5,9 +5,15 @@ import {
   updateProfile,
   onAuthStateChanged,
   sendPasswordResetEmail,
+<<<<<<< HEAD
   AuthErrorCodes,
   GoogleAuthProvider,
   signInWithPopup,
+=======
+  confirmPasswordReset,
+  verifyPasswordResetCode,
+  AuthErrorCodes
+>>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 } from 'firebase/auth';
 import {
   doc,
@@ -392,8 +398,12 @@ class AuthService {
   // Send password reset email
   async resetPassword(email: string): Promise<void> {
     try {
-      await sendPasswordResetEmail(auth, email);
-      toast.success('Password reset email sent');
+      await sendPasswordResetEmail(auth, email, {
+        // Custom action code settings
+        url: `${window.location.origin}/login`, // Redirect URL after password reset
+        handleCodeInApp: false // Handle reset in email, not in app
+      });
+      toast.success('Password reset email sent! Check your inbox.');
     } catch (error: any) {
       console.error('Error sending password reset email:', error);
       
@@ -402,6 +412,48 @@ class AuthService {
         errorMessage = 'No account found with this email address';
       } else if (error.code === AuthErrorCodes.INVALID_EMAIL) {
         errorMessage = 'Invalid email address';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many reset attempts. Please try again later.';
+      }
+      
+      throw new Error(errorMessage);
+    }
+  }
+
+  // Verify password reset code (for custom reset flow)
+  async verifyPasswordResetCode(code: string): Promise<string> {
+    try {
+      const email = await verifyPasswordResetCode(auth, code);
+      return email;
+    } catch (error: any) {
+      console.error('Error verifying password reset code:', error);
+      
+      let errorMessage = 'Invalid or expired reset code';
+      if (error.code === 'auth/invalid-action-code') {
+        errorMessage = 'Invalid reset code';
+      } else if (error.code === 'auth/expired-action-code') {
+        errorMessage = 'Reset code has expired';
+      }
+      
+      throw new Error(errorMessage);
+    }
+  }
+
+  // Confirm password reset with new password
+  async confirmPasswordReset(code: string, newPassword: string): Promise<void> {
+    try {
+      await confirmPasswordReset(auth, code, newPassword);
+      toast.success('Password reset successfully! You can now sign in with your new password.');
+    } catch (error: any) {
+      console.error('Error confirming password reset:', error);
+      
+      let errorMessage = 'Failed to reset password';
+      if (error.code === 'auth/invalid-action-code') {
+        errorMessage = 'Invalid reset code';
+      } else if (error.code === 'auth/expired-action-code') {
+        errorMessage = 'Reset code has expired';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'Password should be at least 6 characters';
       }
       
       throw new Error(errorMessage);

@@ -1,5 +1,6 @@
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
+import { isAdminEmail } from '../constants/admin';
 import toast from 'react-hot-toast';
 
 export function useAuth() {
@@ -16,7 +17,14 @@ export function useAuth() {
       dispatch({ type: 'SET_USER', payload: user });
       dispatch({ type: 'HIDE_AUTH_MODAL' });
       
-      // Execute callback if provided
+      // Check if user is admin and redirect
+      if (user && isAdminEmail(user.email)) {
+        // Redirect to admin dashboard
+        window.location.href = '/admin';
+        return user;
+      }
+      
+      // Execute callback if provided (for normal users)
       if (state.authSuccessCallback) {
         state.authSuccessCallback();
       }

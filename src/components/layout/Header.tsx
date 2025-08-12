@@ -4,7 +4,11 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '../ui/Button';
+<<<<<<< HEAD
 import { isCurrentUserAdmin } from '../../utils/adminUtils';
+=======
+import '../../styles/adminButton.css'; // Add this import for the CSS
+>>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 
 interface HeaderProps {
   onAuthClick?: () => void;
@@ -21,6 +25,7 @@ export function Header({ onAuthClick }: HeaderProps) {
     navigate('/', { replace: true });
   };
 
+<<<<<<< HEAD
   const handleAuthClick = () => {
     if (onAuthClick) {
       onAuthClick();
@@ -29,6 +34,13 @@ export function Header({ onAuthClick }: HeaderProps) {
 
   // Helper function to determine if a nav item is active
   const isActive = (path: string) => location.pathname === path;
+=======
+  // Helper: is admin
+  const isAdmin = state.user && (
+    state.user.email === 'amritob0327.roy@gmail.com' ||
+    state.user.email === 'amritoballavroy@gmail.com'
+  );
+>>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 
   return (
     <motion.header
@@ -58,12 +70,30 @@ export function Header({ onAuthClick }: HeaderProps) {
             }`}
           >
             Explore
+<<<<<<< HEAD
           </Link>
           <Link 
             to="/fleet" 
             className={`text-white/80 hover:text-white transition-colors ${
               isActive('/fleet') ? 'text-white border-b-2 border-white pb-1' : ''
             }`}
+=======
+          </button>
+          {/* Admin Button next to Explore */}
+          {isAdmin && (
+            <button
+              className="admin-btn ml-2"
+              onClick={() => window.location.href = '/admin'}
+              style={{ position: 'relative' }}
+            >
+              🔥 Admin 🔥
+              <span className="comet-border"></span>
+            </button>
+          )}
+          <button 
+            onClick={() => onNavigate?.('fleet')} 
+            className="text-white/80 hover:text-white transition-colors"
+>>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
           >
             Fleet
           </Link>

@@ -2,11 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Phone, User, MapPin, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+<<<<<<< HEAD
 import { FluidButton } from '../ui/FluidButton';
 import { LiquidGlass } from '../ui/LiquidGlass';
 import { NeonText } from '../ui/NeonText';
 import { FloatingParticles } from '../ui/FloatingParticles';
 import { useTouchInteraction } from '../../hooks/useTouchInteraction';
+=======
+import { Button } from '../ui/Button';
+import { GlassCard } from '../ui/GlassCard';
+>>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 import { FirebaseForgotPasswordModal } from './FirebaseForgotPasswordModal';
 import toast from 'react-hot-toast';
 
@@ -30,6 +35,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     region: ''
   });
   const { signIn, resetPassword } = useAuth();
+<<<<<<< HEAD
   const { touchProps } = useTouchInteraction();
 
   // Prevent body scroll when modal is open
@@ -45,6 +51,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+=======
+>>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,6 +184,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl" />
                 </div>
 
+<<<<<<< HEAD
                 {/* Content */}
                 <div className="relative z-10">
                   {/* Close Button */}
@@ -188,6 +197,19 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   >
                     <X className="w-5 h-5" />
                   </motion.button>
+=======
+            {!showForgotPassword && isLogin && (
+              <div className="text-center mt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(true)}
+                  className="text-white/60 hover:text-white text-sm transition-colors"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+            )}
+>>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 
                   {/* Header Section */}
                   <motion.div 

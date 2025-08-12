@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Admin emails whitelist
+    function isAdmin() {
+      return request.auth != null && 
+        request.auth.token.email in [
+          'amritob0327.roy@gmail.com',
+          'amritoballavroy@gmail.com'
+        ];
+    }
+
+    // Users collection - admin full access, users can read/write their own data
+    match /users/{userId} {
+      allow read, write: if isAdmin();
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Bookings collection - admin full access, users can read their bookings
+    match /bookings/{bookingId} {
+      allow read, write: if isAdmin();
+      allow read: if request.auth != null && 
+        request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+    }
+
+    // Vehicles collection - public read, admin write
+    match /vehicles/{vehicleId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Explore Plans collection - public read, admin write
+    match /explorePlans/{exploreId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Bike Tours collection - public read, admin write
+    match /bikeTours/{tourId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Trip Plans collection - public read, admin write
+    match /tripPlans/{tripId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Revenue collection - admin only
+    match /revenue/{revenueId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Admin-specific collections
+    match /admin/{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
