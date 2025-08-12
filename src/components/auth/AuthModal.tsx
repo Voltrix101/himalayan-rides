@@ -2,18 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Phone, User, MapPin, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-<<<<<<< HEAD
 import { FluidButton } from '../ui/FluidButton';
 import { LiquidGlass } from '../ui/LiquidGlass';
 import { NeonText } from '../ui/NeonText';
 import { FloatingParticles } from '../ui/FloatingParticles';
 import { useTouchInteraction } from '../../hooks/useTouchInteraction';
-=======
-import { Button } from '../ui/Button';
-import { GlassCard } from '../ui/GlassCard';
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 import { FirebaseForgotPasswordModal } from './FirebaseForgotPasswordModal';
 import toast from 'react-hot-toast';
+import { FcGoogle } from 'react-icons/fc';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,7 +21,6 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -34,8 +29,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     phone: '',
     region: ''
   });
-  const { signIn, resetPassword } = useAuth();
-<<<<<<< HEAD
+  const { signIn, signInWithGoogle, resetPassword } = useAuth();
   const { touchProps } = useTouchInteraction();
 
   // Prevent body scroll when modal is open
@@ -51,31 +45,23 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
-=======
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsSubmitting(true);
+      await signInWithGoogle();
+      onClose();
+      onAuthSuccess?.();
+    } catch (error) {
+      // Error is already handled in signInWithGoogle
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (showForgotPassword) {
-      if (!formData.email) {
-        toast.error('Please enter your email address');
-        return;
-      }
-      
-      try {
-        setIsSubmitting(true);
-        await resetPassword(formData.email);
-        setShowForgotPassword(false);
-        toast.success('Password reset email sent!');
-      } catch (error) {
-        // Error is already handled in resetPassword
-      } finally {
-        setIsSubmitting(false);
-      }
-      return;
-    }
-
     if (isLogin) {
       // Login - only email and password required
       if (!formData.email || !formData.password) {
@@ -184,7 +170,6 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-purple-400/10 rounded-full blur-3xl" />
                 </div>
 
-<<<<<<< HEAD
                 {/* Content */}
                 <div className="relative z-10">
                   {/* Close Button */}
@@ -197,19 +182,6 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                   >
                     <X className="w-5 h-5" />
                   </motion.button>
-=======
-            {!showForgotPassword && isLogin && (
-              <div className="text-center mt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowForgotModal(true)}
-                  className="text-white/60 hover:text-white text-sm transition-colors"
-                >
-                  Forgot your password?
-                </button>
-              </div>
-            )}
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 
                   {/* Header Section */}
                   <motion.div 
@@ -223,8 +195,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                       variant="rainbow"
                       size="2xl"
                     >
-                      {showForgotPassword ? 'Reset Password' : 
-                       isLogin ? 'Welcome Back' : 'Join the Adventure'}
+                      {isLogin ? 'Welcome Back' : 'Join the Adventure'}
                     </NeonText>
                     <motion.p 
                       className="text-white/80 text-lg leading-relaxed"
@@ -232,8 +203,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                       animate={{ opacity: 1 }}
                       transition={{ delay: 0.2 }}
                     >
-                      {showForgotPassword ? 'Enter your email to reset your password' :
-                       isLogin ? 'Sign in to continue your Himalayan journey' : 'Create your account to explore the majestic Himalayas'}
+                      {isLogin ? 'Sign in to continue your Himalayan journey' : 'Create your account to explore the majestic Himalayas'}
                     </motion.p>
                   </motion.div>
 
@@ -266,7 +236,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                     </motion.div>
 
                     {/* Password Field */}
-                    {!showForgotPassword && (
+                    
                       <motion.div 
                         className="relative group"
                         whileHover={{ scale: 1.02 }}
@@ -281,7 +251,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                           value={formData.password}
                           onChange={handleInputChange}
                           className="w-full pl-14 pr-14 py-4 bg-white/10 border border-white/30 rounded-2xl text-white placeholder-white/50 focus:outline-none focus:border-purple-400 focus:bg-white/15 focus:shadow-lg focus:shadow-purple-400/20 transition-all duration-300 backdrop-blur-sm group-hover:border-white/40"
-                          required={!showForgotPassword}
+                          required
                           minLength={6}
                         />
                         <motion.button
@@ -295,10 +265,10 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         </motion.button>
                         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-400/10 via-transparent to-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                       </motion.div>
-                    )}
+                    
 
                     {/* Sign Up Additional Fields */}
-                    {!isLogin && !showForgotPassword && (
+                    {!isLogin && (
                       <>
                         <motion.div 
                           className="relative group"
@@ -425,11 +395,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                         size="lg"
                         className="w-full h-14 text-lg font-medium bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:via-blue-500 hover:to-purple-500 shadow-xl shadow-cyan-500/25 transition-all duration-300"
                         disabled={isSubmitting}
+                        type="submit"
                         glow
-                        onClick={() => {
-                          const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
-                          handleSubmit(fakeEvent);
-                        }}
                       >
                         <motion.span 
                           className="relative z-10 flex items-center justify-center gap-2"
@@ -443,17 +410,42 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                             </>
                           ) : (
                             <>
-                              {showForgotPassword ? 'Send Reset Email' :
-                               isLogin ? 'Sign In' : 'Create Account'}
+                              {isLogin ? 'Sign In' : 'Create Account'}
                             </>
                           )}
                         </motion.span>
                       </FluidButton>
                     </motion.div>
                   </motion.form>
+                  {/* OR Separator */}
+                  <div className="my-6 flex items-center justify-center">
+                    <span className="h-px w-full bg-white/20"></span>
+                    <span className="mx-4 text-sm text-white/60">OR</span>
+                    <span className="h-px w-full bg-white/20"></span>
+                  </div>
+
+                  {/* Google Sign-In Button */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <FluidButton
+                      variant="outlined"
+                      size="lg"
+                      className="w-full h-14 text-lg font-medium border-white/30 hover:border-white/50 hover:bg-white/10 transition-all duration-300"
+                      onClick={handleGoogleSignIn}
+                      disabled={isSubmitting}
+                    >
+                      <motion.span className="flex items-center justify-center gap-3">
+                        <FcGoogle size={24} />
+                        Sign in with Google
+                      </motion.span>
+                    </FluidButton>
+                  </motion.div>
 
                   {/* Forgot Password Link */}
-                  {!showForgotPassword && isLogin && (
+                  {isLogin && (
                     <motion.div 
                       className="text-center mt-6"
                       initial={{ opacity: 0 }}
@@ -479,19 +471,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.6 }}
                   >
-                    {showForgotPassword ? (
-                      <motion.button
-                        onClick={() => {
-                          setShowForgotPassword(false);
-                          setFormData(prev => ({ ...prev, password: '' }));
-                        }}
-                        className="text-white/80 hover:text-white transition-all duration-300 font-medium flex items-center justify-center gap-2 mx-auto"
-                        whileHover={{ scale: 1.05, x: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        ← Back to sign in
-                      </motion.button>
-                    ) : (
+                   
                       <motion.button
                         onClick={() => {
                           setIsLogin(!isLogin);
@@ -503,7 +483,6 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
                       >
                         {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
                       </motion.button>
-                    )}
                   </motion.div>
                 </div>
               </LiquidGlass>
