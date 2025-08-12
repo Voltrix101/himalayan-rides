@@ -29,7 +29,7 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     phone: '',
     region: ''
   });
-  const { signIn, signInWithGoogle, resetPassword } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const { touchProps } = useTouchInteraction();
 
   // Prevent body scroll when modal is open

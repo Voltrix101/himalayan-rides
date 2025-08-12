@@ -49,6 +49,35 @@ export function useAuth() {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const user = await authService.signInWithGoogle();
+      dispatch({ type: 'SET_USER', payload: user });
+      dispatch({ type: 'HIDE_AUTH_MODAL' });
+      
+      // Check if user is admin and redirect
+      if (user && isAdminEmail(user.email)) {
+        // Redirect to admin dashboard
+        window.location.href = '/admin';
+        return user;
+      }
+      
+      // Execute callback if provided (for normal users)
+      if (state.authSuccessCallback) {
+        state.authSuccessCallback();
+      }
+      
+      return user;
+    } catch (error: any) {
+      console.error('Google sign in error:', error);
+      toast.error(error.message || 'Failed to sign in with Google');
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
   const resetPassword = async (email: string) => {
     try {
       await authService.resetPassword(email);
@@ -97,6 +126,7 @@ export function useAuth() {
     isLoading: state.isLoading,
     showAuthModal: state.showAuthModal,
     signIn,
+    signInWithGoogle,
     signOut,
     resetPassword,
     requireAuth,
