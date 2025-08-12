@@ -1,7 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { bikeToursService } from '../../../services/bikeToursService';
+import { bikeToursService }  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-white">Bike Tour Plans Management</h1>
+        <button onClick={() => openModal()} className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 hover:shadow-lg transition-all">
+          <Plus className="w-5 h-5" /> Add Bike Tour
+        </button>
+      </div>
+
+      {/* Preloader Component - Run once to add sample data */}
+      <BikeToursPreloader />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{tours.length === 0 ? (
+          <div className="col-span-full text-center text-white/60 py-12">
+            <p className="text-lg mb-2">No bike tours available</p>
+            <p className="text-sm">Use the preloader above to add sample Ladakh tours or create your own!</p>
+          </div>
+        ) : (
+          tours.map(tour => (../../services/bikeToursService';
 import { BikeTourPlan } from '../../../types';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import { BikeToursPreloader } from '../components/BikeToursPreloader';
 
 export function BikeToursPage() {
   const [tours, setTours] = useState<BikeTourPlan[]>([]);
@@ -105,7 +124,8 @@ export function BikeToursPage() {
               <button onClick={() => handleDelete(tour.id)} className="bg-red-500/20 text-red-300 px-3 py-2 rounded-lg hover:bg-red-500/30 transition-colors"><Trash2 className="w-4 h-4" /></button>
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

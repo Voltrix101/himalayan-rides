@@ -49,6 +49,10 @@ service cloud.firestore {
       allow read: if true;
       allow create, update, delete: if isAdmin();
     }
+    match /experiences/{docId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
 
     // Bookings/Trips: owner read/write, admin full
     match /bookings/{bookingId} {

@@ -58,6 +58,35 @@ export function useAuth() {
       throw error;
     }
   };
+
+  const signInWithGoogle = async () => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const user = await authService.signInWithGoogle();
+      dispatch({ type: 'SET_USER', payload: user });
+      dispatch({ type: 'HIDE_AUTH_MODAL' });
+      
+      // Check if user is admin and redirect
+      if (user && isAdminEmail(user.email)) {
+        // Redirect to admin dashboard
+        window.location.href = '/admin';
+        return user;
+      }
+      
+      // Execute callback if provided (for normal users)
+      if (state.authSuccessCallback) {
+        state.authSuccessCallback();
+      }
+      
+      return user;
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      toast.error(error.message || 'Failed to sign in with Google');
+      throw error;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
   
   const requireAuth = (callback?: () => void) => {
     if (!state.user?.isAuthenticated) {
@@ -99,6 +128,7 @@ export function useAuth() {
     signIn,
     signOut,
     resetPassword,
+    signInWithGoogle,
     requireAuth,
     login,
     logout,

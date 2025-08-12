@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import React, { useState, useMemo, useCallback } from 'react';
-=======
-import { useState } from 'react';
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
   Mountain, 
@@ -25,9 +21,7 @@ import { GlassCard } from '../ui/GlassCard';
 import { Button } from '../ui/Button';
 import { ExperienceBookingModal } from '../booking/ExperienceBookingModal';
 import { BikeTourCard } from '../tours/BikeTourCard';
-<<<<<<< HEAD
-import { bikeTourPlans } from '../../data/mockData';
-import { PerformanceMonitor } from '../../utils/performanceMonitor';
+import { adminFirebaseService, BikeTour } from '../../services/adminFirebaseService';
 
 interface Destination {
   id: string;
@@ -48,9 +42,8 @@ interface Destination {
     videoUrl: string;
   };
 }
-=======
+
 import { GlassExploreCard } from './GlassExploreCard';
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
 
 interface Experience {
   id: string;
@@ -149,55 +142,63 @@ export function ExploreLadakh() {
   const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [showExperienceBooking, setShowExperienceBooking] = useState(false);
+  const [bikeTours, setBikeTours] = useState<BikeTour[]>([]);
+  const [loading, setLoading] = useState(true);
   const { scrollY } = useScroll();
   const y1 = useTransform(scrollY, [0, 300], [0, 50]);
 
-  // Memoize bike tours for performance
-  const memoizedBikeTours = useMemo(() => {
-    PerformanceMonitor.startProfile('memoize-bike-tours');
-    const result = bikeTourPlans;
-    PerformanceMonitor.endProfile('memoize-bike-tours');
-    return result;
+  // Load bike tours from admin service
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    
+    const loadBikeTours = async () => {
+      try {
+        setLoading(true);
+        unsubscribe = await adminFirebaseService.getBikeTours((tours) => {
+          setBikeTours(tours);
+          setLoading(false);
+          console.log('Loaded bike tours for explore page:', tours.length);
+        });
+      } catch (error) {
+        console.error('Error loading bike tours:', error);
+        setLoading(false);
+      }
+    };
+
+    loadBikeTours();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
 
-<<<<<<< HEAD
-  // Performance monitoring
-  React.useEffect(() => {
-    PerformanceMonitor.startProfile('ExploreLadakh-render');
-    return () => {
-      PerformanceMonitor.endProfile('ExploreLadakh-render');
-    };
+  // Convert BikeTour to BikeTourPlan format for the card component
+  const convertTourForCard = (tour: BikeTour) => ({
+    id: tour.id,
+    title: tour.name,
+    description: tour.description,
+    duration: `${tour.duration} Days`,
+    price: tour.pricePerPerson,
+    highlights: tour.highlights,
+    itinerary: tour.itinerary,
+    tags: [tour.difficulty, tour.region],
+    coverImage: tour.image,
+    isFeatured: false
   });
 
-  // Memoize filtered experiences for performance
-  const filteredExperiences = useMemo(() => {
-    PerformanceMonitor.startProfile('filter-experiences');
-    const result = activeExperienceFilter === 'All' 
-      ? experiences 
-      : experiences.filter(exp => exp.category === activeExperienceFilter);
-    PerformanceMonitor.endProfile('filter-experiences');
-    return result;
-  }, [activeExperienceFilter]);
+  // Filter experiences
+  const filteredExperiences = activeExperienceFilter === 'All' 
+    ? experiences 
+    : experiences.filter(exp => exp.category === activeExperienceFilter);
 
-  // Memoize difficulty color calculation
-  const getDifficultyColor = useCallback((difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy': return 'text-green-400';
-      case 'Moderate': return 'text-yellow-400';
-      case 'Challenging': return 'text-red-400';
-      default: return 'text-white';
-    }
-  }, []);
-
-  const handleBookExperience = useCallback((experience: Experience) => {
-=======
   const handleBookExperience = (experience: Experience) => {
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
     requireAuth(() => {
       setSelectedExperience(experience);
       setShowBookingModal(true);
     });
-  }, [requireAuth]);
+  };
 
   return (
     <div className="min-h-screen pt-20">
@@ -394,69 +395,8 @@ export function ExploreLadakh() {
                 animate={{ opacity: 1 }}
                 className="col-span-2 text-center py-16"
               >
-<<<<<<< HEAD
-                <GlassCard className="overflow-hidden group cursor-pointer">
-                  <div className="relative h-64 overflow-hidden">
-                    <OptimizedImage
-                      src={destination.image}
-                      alt={destination.name}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    
-                    <div className="absolute top-4 right-4 flex gap-2">
-                      <div className="bg-white/20 backdrop-blur-md rounded-full px-3 py-1">
-                        <span className="text-white text-sm font-medium">{destination.altitude}</span>
-                      </div>
-                      <div className={`bg-white/20 backdrop-blur-md rounded-full px-3 py-1`}>
-                        <span className={`text-sm font-medium ${getDifficultyColor(destination.difficulty)}`}>
-                          {destination.difficulty}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-2xl font-bold text-white mb-2">{destination.name}</h3>
-                      <div className="flex items-center gap-2 text-white/80 text-sm">
-                        <MapPin className="w-4 h-4" />
-                        <span>{destination.distance}</span>
-                        <Clock className="w-4 h-4 ml-2" />
-                        <span>{destination.bestTime}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <p className="text-white/80 mb-4 leading-relaxed">{destination.description}</p>
-                    
-                    <div className="mb-4">
-                      <h4 className="text-white font-medium mb-2">Highlights:</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {destination.highlights.map((highlight, idx) => (
-                          <span
-                            key={idx}
-                            className="px-3 py-1 bg-white/10 rounded-full text-xs text-white/80"
-                          >
-                            {highlight}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <Button 
-                      variant="glass" 
-                      className="w-full group"
-                      onClick={() => setSelectedDestination(destination)}
-                    >
-                      Explore {destination.name}
-                      <ChevronRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </div>
-                </GlassCard>
-=======
                 <p className="text-white/60 text-lg">No explore plans available yet</p>
                 <p className="text-white/40 text-sm mt-2">Check back soon for new adventures!</p>
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
               </motion.div>
             )}
           </div>
@@ -588,11 +528,8 @@ export function ExploreLadakh() {
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-<<<<<<< HEAD
-            {memoizedBikeTours.map((tour, index) => (
-=======
-            {state.bikeTours.length > 0 ? (
-              state.bikeTours.slice(0, 4).map((tour, index) => (
+            {!loading && bikeTours.length > 0 ? (
+              bikeTours.slice(0, 4).map((tour, index) => (
                 <motion.div
                   key={tour.id}
                   initial={{ opacity: 0, y: 50 }}
@@ -600,11 +537,18 @@ export function ExploreLadakh() {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.2 }}
                 >
-                  <BikeTourCard tour={tour} />
+                  <BikeTourCard tour={convertTourForCard(tour)} />
                 </motion.div>
               ))
+            ) : loading ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="col-span-2 text-center py-16"
+              >
+                <p className="text-white/60 text-lg">Loading bike tours...</p>
+              </motion.div>
             ) : (
->>>>>>> 421eaf0e2ad207f5c1f0b53b4e8c371ed456e2d5
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

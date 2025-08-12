@@ -2,9 +2,14 @@ import {
   collection, 
   onSnapshot, 
   getDocs,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
   query,
   where,
-  orderBy 
+  orderBy,
+  Timestamp 
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { BikeTourPlan } from '../types';
@@ -90,6 +95,66 @@ export class BikeToursService {
       toast.error('Failed to load bike tours');
       return [];
     }
+  }
+
+  // Add a new bike tour
+  public async addBikeTour(tour: Omit<BikeTourPlan, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    try {
+      const now = Timestamp.now();
+      const docRef = await addDoc(this.bikeToursCollection, {
+        ...tour,
+        createdAt: now,
+        updatedAt: now
+      });
+      toast.success('Bike tour added successfully!');
+      return docRef.id;
+    } catch (error) {
+      console.error('Error adding bike tour:', error);
+      toast.error('Failed to add bike tour');
+      throw error;
+    }
+  }
+
+  // Update a bike tour
+  public async updateBikeTour(id: string, updates: Partial<BikeTourPlan>): Promise<void> {
+    try {
+      const tourDoc = doc(db, 'bikeTours', id);
+      await updateDoc(tourDoc, {
+        ...updates,
+        updatedAt: Timestamp.now()
+      });
+      toast.success('Bike tour updated successfully!');
+    } catch (error) {
+      console.error('Error updating bike tour:', error);
+      toast.error('Failed to update bike tour');
+      throw error;
+    }
+  }
+
+  // Delete a bike tour
+  public async deleteBikeTour(id: string): Promise<void> {
+    try {
+      const tourDoc = doc(db, 'bikeTours', id);
+      await deleteDoc(tourDoc);
+      toast.success('Bike tour deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting bike tour:', error);
+      toast.error('Failed to delete bike tour');
+      throw error;
+    }
+  }
+
+  // Backward compatibility aliases for existing components
+  public async addBikeTourPlan(tour: Omit<BikeTourPlan, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    return this.addBikeTour(tour);
+  }
+
+  public async updateBikeTourPlan(id: string, updates: Partial<BikeTourPlan>): Promise<void> {
+    return this.updateBikeTour(id, updates);
+  }
+
+  public async deleteBikeTourPlan(id: string): Promise<void> {
+    return this.deleteBikeTour(id);
   }
 }
 

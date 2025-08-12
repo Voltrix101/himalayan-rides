@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './context/AppContext';
 import { Header } from './components/layout/Header';
+import { AuthModal } from './components/auth/AuthModal';
 import { UniversalModal, ModalType } from './components/ui/UniversalModal';
 import { PerformanceDisplay } from './hooks/usePerformanceMonitor';
 import { optimizedFirestore } from './utils/firebaseOptimizer';
@@ -67,45 +68,38 @@ function App() {
 }
 
 function AppContent() {
-  const { user, showAuthModal, hideAuthModal, isLoading } = useAuth();
+  const { user, showAuthModal, hideAuthModal, login, isLoading } = useAuth();
   const { state } = useApp();
   
-  // Universal Modal State
-  const [modalState, setModalState] = useState<{
+  // Non-auth modal state (for booking, tour, etc.)
+  const [nonAuthModalState, setNonAuthModalState] = useState<{
     isOpen: boolean;
-    type: ModalType;
+    type: Exclude<ModalType, 'auth'>;
     data: any;
   }>({
     isOpen: false,
-    type: 'auth',
+    type: 'booking',
     data: {}
   });
 
-  // Universal Modal handlers
+  // Non-auth modal handlers
   const openModal = useCallback((type: ModalType, data: any = {}) => {
     console.log('🚪 Opening modal:', type, data);
-    setModalState({ isOpen: true, type, data });
+    if (type === 'auth') {
+      // For auth modals, use the useAuth state
+      // This should be handled by calling login() from useAuth instead
+      console.warn('Use login() from useAuth instead of openModal("auth")');
+      return;
+    }
+    setNonAuthModalState({ isOpen: true, type: type as Exclude<ModalType, 'auth'>, data });
   }, []);
 
-  const closeModal = useCallback(() => {
-    setModalState(prev => ({ ...prev, isOpen: false }));
-    // Also hide auth modal in useAuth state if it was an auth modal
-    if (modalState.type === 'auth') {
-      hideAuthModal();
-    }
-  }, [hideAuthModal, modalState.type]);
+  const closeNonAuthModal = useCallback(() => {
+    setNonAuthModalState(prev => ({ ...prev, isOpen: false }));
+  }, []);
 
   // Get background image from selected region
   const backgroundImage = state.selectedRegion.image;
-
-  // Handle auth modal from useAuth
-  useEffect(() => {
-    console.log('🎭 Auth modal state changed:', showAuthModal);
-    if (showAuthModal) {
-      console.log('📱 Opening auth modal...');
-      openModal('auth');
-    }
-  }, [showAuthModal, openModal]);
 
   useEffect(() => {
     const handleOpenTourModal = () => {
@@ -148,7 +142,7 @@ function AppContent() {
       
       {/* Content */}
       <div className="relative z-10">
-        <Header onAuthClick={() => openModal('auth')} />
+        <Header onAuthClick={login} />
         
         <main className="pt-16">
           <Suspense fallback={<LoadingSpinner />}>
@@ -200,12 +194,19 @@ function AppContent() {
         </main>
       </div>
 
-      {/* Universal Modal */}
+      {/* Auth Modal - using dedicated AuthModal component with Google sign-in */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={hideAuthModal}
+        onAuthSuccess={hideAuthModal}
+      />
+
+      {/* Non-Auth Modals - controlled by local state */}
       <UniversalModal
-        isOpen={modalState.isOpen}
-        onClose={closeModal}
-        type={modalState.type}
-        data={modalState.data}
+        isOpen={nonAuthModalState.isOpen}
+        onClose={closeNonAuthModal}
+        type={nonAuthModalState.type}
+        data={nonAuthModalState.data}
       />
 
       {/* Admin Performance Monitor */}

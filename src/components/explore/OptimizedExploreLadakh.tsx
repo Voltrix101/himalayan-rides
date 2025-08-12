@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Mountain, 
@@ -13,6 +13,7 @@ import { OptimizedImage } from '../ui/OptimizedImage';
 import { Button } from '../ui/Button';
 import { UniversalModal } from '../ui/UniversalModal';
 import { useOptimizedScroll } from '../../hooks/useOptimizedScroll';
+import { adminFirebaseService, BikeTour as AdminBikeTour, Experience as AdminExperience } from '../../services/adminFirebaseService';
 
 // Types - exactly matching deployed website
 interface Destination {
@@ -54,6 +55,17 @@ interface BikeTour {
   highlights: string[];
   includes: string[];
   route: string;
+  itinerary?: {
+    day: number;
+    title: string;
+    description: string;
+    activities: string[];
+    accommodation: string;
+    meals: string[];
+    distance?: string;
+    altitude?: string;
+  }[];
+  region?: string;
 }
 
 // Performance-optimized data
@@ -112,7 +124,7 @@ const destinations: Destination[] = [
   }
 ];
 
-const experiences: Experience[] = [
+const originalExperiences: Experience[] = [
   {
     id: 'monastery-tour',
     title: 'Ancient Monasteries Tour',
@@ -137,7 +149,7 @@ const experiences: Experience[] = [
   }
 ];
 
-const bikeTours: BikeTour[] = [
+const originalBikeTours: BikeTour[] = [
   {
     id: 'leh-ladakh-ultimate',
     name: 'Leh-Ladakh Ultimate Adventure',
@@ -233,8 +245,8 @@ const DestinationCard = memo<{
       onClick={handleClick}
     >
       <OptimizedGlass 
-        intensity="medium" 
-        className="overflow-hidden hover:ring-2 hover:ring-purple-400/50 transition-all duration-300"
+        intensity="heavy" 
+        className="overflow-hidden hover:ring-2 hover:ring-purple-400/50 transition-all duration-300 bg-black/20 border border-white/10"
       >
         <div className="relative h-48 overflow-hidden">
           <OptimizedImage
@@ -257,31 +269,26 @@ const DestinationCard = memo<{
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
             <span className="font-medium">{destination.rating}</span>
           </div>
-
-          {/* Price */}
-          <div className="absolute bottom-4 right-4">
-            <span className="text-white font-bold text-lg">₹{destination.price.toLocaleString()}</span>
-          </div>
         </div>
 
-        <div className="p-6">
-          <h3 className="text-xl font-bold text-white mb-2">{destination.name}</h3>
-          <p className="text-gray-300 text-sm mb-4 line-clamp-2">{destination.description}</p>
+        <div className="p-6 bg-black/30 backdrop-blur-sm">
+          <h3 className="text-xl font-bold text-white mb-2 drop-shadow-lg">{destination.name}</h3>
+          <p className="text-white/90 text-sm mb-4 line-clamp-2 drop-shadow-md">{destination.description}</p>
           
-          <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
-            <div className="flex items-center">
-              <Mountain className="w-4 h-4 mr-1" />
-              <span>{destination.altitude}</span>
+          <div className="flex items-center justify-between text-sm text-white/80 mb-4">
+            <div className="flex items-center bg-white/10 px-2 py-1 rounded">
+              <Mountain className="w-4 h-4 mr-1 text-blue-300" />
+              <span className="font-medium">{destination.altitude}</span>
             </div>
-            <div className="flex items-center">
-              <MapPin className="w-4 h-4 mr-1" />
-              <span>{destination.distance}</span>
+            <div className="flex items-center bg-white/10 px-2 py-1 rounded">
+              <MapPin className="w-4 h-4 mr-1 text-green-300" />
+              <span className="font-medium">{destination.distance}</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-purple-300 text-sm">{destination.bestTime}</span>
-            <ChevronRight className="w-5 h-5 text-purple-400" />
+            <span className="text-purple-200 text-sm font-medium bg-purple-600/20 px-3 py-1 rounded-full">{destination.bestTime}</span>
+            <ChevronRight className="w-5 h-5 text-white/80" />
           </div>
         </div>
       </OptimizedGlass>
@@ -302,7 +309,7 @@ const ExperienceCard = memo<{
 
   return (
     <motion.div variants={itemVariants} whileHover={{ y: -5, scale: 1.02 }}>
-      <OptimizedGlass intensity="medium" className="overflow-hidden">
+      <OptimizedGlass intensity="heavy" className="overflow-hidden bg-black/20 border border-white/10">
         <div className="relative h-40 overflow-hidden">
           <OptimizedImage
             src={experience.image}
@@ -324,23 +331,23 @@ const ExperienceCard = memo<{
           </div>
         </div>
 
-        <div className="p-4">
-          <h4 className="text-lg font-bold text-white mb-2">{experience.title}</h4>
-          <p className="text-gray-300 text-sm mb-3 line-clamp-2">{experience.description}</p>
+        <div className="p-4 bg-black/30 backdrop-blur-sm">
+          <h4 className="text-lg font-bold text-white mb-2 drop-shadow-lg">{experience.title}</h4>
+          <p className="text-white/90 text-sm mb-3 line-clamp-2 drop-shadow-md">{experience.description}</p>
           
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center text-sm text-gray-400">
-              <Clock className="w-4 h-4 mr-1" />
-              <span>{experience.duration}</span>
+            <div className="flex items-center text-sm text-white/80 bg-white/10 px-2 py-1 rounded">
+              <Clock className="w-4 h-4 mr-1 text-blue-300" />
+              <span className="font-medium">{experience.duration}</span>
             </div>
-            <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
+            <span className="px-3 py-1 bg-purple-600/30 text-purple-200 text-xs rounded-full font-medium border border-purple-400/30">
               {experience.category}
             </span>
           </div>
 
           <Button
             onClick={handleBook}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg"
           >
             Book Experience
           </Button>
@@ -372,7 +379,7 @@ const BikeTourCard = memo<{
 
   return (
     <motion.div variants={itemVariants} whileHover={{ y: -5, scale: 1.02 }}>
-      <OptimizedGlass intensity="medium" className="overflow-hidden">
+      <OptimizedGlass intensity="heavy" className="overflow-hidden bg-black/20 border border-white/10">
         <div className="relative h-48 overflow-hidden">
           <OptimizedImage
             src={tour.image}
@@ -397,22 +404,22 @@ const BikeTourCard = memo<{
 
           {/* Price */}
           <div className="absolute bottom-4 right-4">
-            <span className="text-white font-bold text-lg">₹{tour.price.toLocaleString()}</span>
+            <span className="text-white font-bold text-lg">₹{(tour.price || 0).toLocaleString()}</span>
           </div>
         </div>
 
-        <div className="p-4">
-          <h4 className="text-lg font-bold text-white mb-2">{tour.name}</h4>
-          <p className="text-gray-300 text-sm mb-3 line-clamp-2">{tour.description}</p>
+        <div className="p-4 bg-black/30 backdrop-blur-sm">
+          <h4 className="text-lg font-bold text-white mb-2 drop-shadow-lg">{tour.name}</h4>
+          <p className="text-white/90 text-sm mb-3 line-clamp-2 drop-shadow-md">{tour.description}</p>
           
-          <div className="flex items-center justify-between text-sm text-gray-400 mb-3">
-            <div className="flex items-center">
-              <Clock className="w-4 h-4 mr-1" />
-              <span>{tour.duration}</span>
+          <div className="flex items-center justify-between text-sm text-white/80 mb-3">
+            <div className="flex items-center bg-white/10 px-2 py-1 rounded">
+              <Clock className="w-4 h-4 mr-1 text-blue-300" />
+              <span className="font-medium">{tour.duration}</span>
             </div>
-            <div className="flex items-center">
-              <MapPin className="w-4 h-4 mr-1" />
-              <span>{tour.distance}</span>
+            <div className="flex items-center bg-white/10 px-2 py-1 rounded">
+              <MapPin className="w-4 h-4 mr-1 text-green-300" />
+              <span className="font-medium">{tour.distance}</span>
             </div>
           </div>
 
@@ -420,12 +427,12 @@ const BikeTourCard = memo<{
           <div className="mb-4">
             <div className="flex flex-wrap gap-1">
               {tour.highlights.slice(0, 3).map((highlight, index) => (
-                <span key={index} className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded">
+                <span key={index} className="px-2 py-1 bg-blue-600/30 text-blue-200 text-xs rounded border border-blue-400/30 font-medium">
                   {highlight}
                 </span>
               ))}
               {tour.highlights.length > 3 && (
-                <span className="px-2 py-1 bg-gray-500/20 text-gray-300 text-xs rounded">
+                <span className="px-2 py-1 bg-gray-600/30 text-gray-200 text-xs rounded border border-gray-400/30 font-medium">
                   +{tour.highlights.length - 3} more
                 </span>
               )}
@@ -434,7 +441,7 @@ const BikeTourCard = memo<{
 
           <Button
             onClick={handleBook}
-            className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+            className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 shadow-lg"
           >
             🏍️ Book Tour
           </Button>
@@ -453,6 +460,113 @@ export const ExploreLadakh = memo(() => {
   const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
   const [selectedBikeTour, setSelectedBikeTour] = useState<BikeTour | null>(null);
   const [activeTab, setActiveTab] = useState<'destinations' | 'experiences' | 'bike-tours'>('destinations');
+  const [bikeTours, setBikeTours] = useState<BikeTour[]>([]);
+  const [loadingTours, setLoadingTours] = useState(true);
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [loadingExperiences, setLoadingExperiences] = useState(true);
+  const [showItinerary, setShowItinerary] = useState(false);
+
+  // Load bike tours from Firebase
+  useEffect(() => {
+    setLoadingTours(true);
+    
+    const loadTours = async () => {
+      try {
+        const unsubscribe = await adminFirebaseService.getBikeTours((adminTours: AdminBikeTour[]) => {
+          try {
+            // Filter out invalid tours and convert admin tours to component format
+            const convertedTours: BikeTour[] = adminTours
+              .filter((tour: AdminBikeTour) => tour.name && tour.pricePerPerson) // Filter out invalid entries
+              .map((tour: AdminBikeTour) => ({
+                id: tour.id,
+                name: tour.name,
+                description: tour.description,
+                image: tour.image || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+                duration: `${tour.duration} Days`,
+                distance: 'Distance varies', // AdminBikeTour doesn't have distance property
+                difficulty: (tour.difficulty === 'Easy' || tour.difficulty === 'Moderate') ? 'Intermediate' :
+                           (tour.difficulty === 'Challenging') ? 'Advanced' : 'Expert',
+                price: tour.pricePerPerson || 0,
+                rating: 4.5, // Default rating since it's not in admin interface
+                highlights: tour.highlights || [],
+                includes: tour.inclusions || [],
+                route: tour.startLocation === tour.endLocation 
+                  ? `${tour.startLocation} Circuit` 
+                  : `${tour.startLocation} → ${tour.endLocation}`,
+                itinerary: tour.itinerary || [],
+                region: tour.region || 'Ladakh'
+              }));
+            
+            setBikeTours(convertedTours);
+            setLoadingTours(false);
+          } catch (error) {
+            console.error('Error converting bike tours:', error);
+            // Fallback to original hardcoded tours if conversion fails
+            setBikeTours(originalBikeTours);
+            setLoadingTours(false);
+          }
+        });
+
+        // Cleanup subscription on unmount
+        return () => {
+          if (unsubscribe) unsubscribe();
+        };
+      } catch (error) {
+        console.error('Error setting up bike tours listener:', error);
+        setBikeTours(originalBikeTours);
+        setLoadingTours(false);
+      }
+    };
+
+    loadTours();
+  }, []);
+
+  // Load experiences from Firebase
+  useEffect(() => {
+    setLoadingExperiences(true);
+    
+    const loadExperiences = async () => {
+      try {
+        const unsubscribe = await adminFirebaseService.getExperiences((adminExperiences: AdminExperience[]) => {
+          try {
+            // Filter out invalid experiences and convert admin experiences to component format
+            const convertedExperiences: Experience[] = adminExperiences
+              .filter((exp: AdminExperience) => exp.title && exp.price) // Filter out invalid entries
+              .map((exp: AdminExperience) => ({
+                id: exp.id,
+                title: exp.title,
+                description: exp.description,
+                image: exp.image || 'https://images.pexels.com/photos/6176940/pexels-photo-6176940.jpeg?auto=compress&cs=tinysrgb&w=600',
+                duration: exp.duration,
+                price: exp.price || 0,
+                rating: exp.rating || 4.5,
+                category: exp.category,
+                highlights: exp.highlights || []
+              }));
+            
+            setExperiences(convertedExperiences);
+            setLoadingExperiences(false);
+          } catch (error) {
+            console.error('Error converting experiences:', error);
+            // Fallback to original hardcoded experiences if conversion fails
+            setExperiences(originalExperiences);
+            setLoadingExperiences(false);
+          }
+        });
+
+        // Cleanup subscription on unmount
+        return () => {
+          if (unsubscribe) unsubscribe();
+        };
+      } catch (error) {
+        console.error('Error setting up experiences listener:', error);
+        setExperiences(originalExperiences);
+        setLoadingExperiences(false);
+      }
+    };
+
+    loadExperiences();
+  }, []);
 
   // Optimized scroll effects
   const { parallaxY } = useOptimizedScroll({
@@ -479,6 +593,7 @@ export const ExploreLadakh = memo(() => {
     setShowBookingModal(false);
     setSelectedExperience(null);
     setSelectedBikeTour(null);
+    setShowItinerary(false);
   }, []);
 
   const handleTabChange = useCallback((tab: 'destinations' | 'experiences' | 'bike-tours') => {
@@ -490,9 +605,12 @@ export const ExploreLadakh = memo(() => {
       <div className="min-h-screen relative overflow-hidden">
         {/* Background with parallax */}
         <motion.div 
-          className="absolute inset-0 bg-gradient-to-br from-purple-900/95 via-blue-900/95 to-indigo-900/95"
+          className="absolute inset-0 bg-gradient-to-br from-purple-900/98 via-blue-900/98 to-indigo-900/98"
           style={{ y: parallaxY }}
         />
+        
+        {/* Additional overlay for better contrast */}
+        <div className="absolute inset-0 bg-black/20" />
         
         {/* Main Content */}
         <div className="relative min-h-screen overflow-auto">
@@ -504,47 +622,49 @@ export const ExploreLadakh = memo(() => {
           >
             {/* Header */}
             <motion.div variants={itemVariants} className="text-center mb-12">
-              <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
-                Explore Ladakh
-              </h1>
-              <p className="text-xl text-purple-200 mb-8">
-                Discover the Land of High Passes
-              </p>
-              
-              {/* Tab Navigation */}
-              <div className="flex justify-center mb-8">
-                <OptimizedGlass intensity="medium" className="p-2 inline-flex rounded-lg">
-                  <button
-                    onClick={() => handleTabChange('destinations')}
-                    className={`px-6 py-3 rounded-lg transition-all duration-300 ${
-                      activeTab === 'destinations'
-                        ? 'bg-purple-600 text-white'
-                        : 'text-purple-200 hover:text-white'
-                    }`}
-                  >
-                    Destinations
-                  </button>
-                  <button
-                    onClick={() => handleTabChange('experiences')}
-                    className={`px-6 py-3 rounded-lg transition-all duration-300 ${
-                      activeTab === 'experiences'
-                        ? 'bg-purple-600 text-white'
-                        : 'text-purple-200 hover:text-white'
-                    }`}
-                  >
-                    Experiences
-                  </button>
-                  <button
-                    onClick={() => handleTabChange('bike-tours')}
-                    className={`px-6 py-3 rounded-lg transition-all duration-300 ${
-                      activeTab === 'bike-tours'
-                        ? 'bg-orange-600 text-white'
-                        : 'text-orange-200 hover:text-white'
-                    }`}
-                  >
-                    🏍️ Bike Tours
-                  </button>
-                </OptimizedGlass>
+              <div className="bg-black/20 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
+                <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 drop-shadow-2xl">
+                  Explore Ladakh
+                </h1>
+                <p className="text-xl text-white/90 mb-8 drop-shadow-lg font-medium">
+                  Discover the Land of High Passes
+                </p>
+                
+                {/* Tab Navigation */}
+                <div className="flex justify-center mb-0">
+                  <OptimizedGlass intensity="heavy" className="p-3 inline-flex rounded-xl bg-black/30 border border-white/20">
+                    <button
+                      onClick={() => handleTabChange('destinations')}
+                      className={`px-6 py-3 rounded-lg transition-all duration-300 font-semibold ${
+                        activeTab === 'destinations'
+                          ? 'bg-purple-600 text-white shadow-lg'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      Destinations
+                    </button>
+                    <button
+                      onClick={() => handleTabChange('experiences')}
+                      className={`px-6 py-3 rounded-lg transition-all duration-300 font-semibold ${
+                        activeTab === 'experiences'
+                          ? 'bg-purple-600 text-white shadow-lg'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      Experiences
+                    </button>
+                    <button
+                      onClick={() => handleTabChange('bike-tours')}
+                      className={`px-6 py-3 rounded-lg transition-all duration-300 font-semibold ${
+                        activeTab === 'bike-tours'
+                          ? 'bg-orange-600 text-white shadow-lg'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      🏍️ Bike Tours
+                    </button>
+                  </OptimizedGlass>
+                </div>
               </div>
             </motion.div>
 
@@ -560,20 +680,40 @@ export const ExploreLadakh = memo(() => {
                   onSelect={handleDestinationSelect}
                 />
               ))}
-              {activeTab === 'experiences' && experiences.map(experience => (
-                <ExperienceCard
-                  key={experience.id}
-                  experience={experience}
-                  onBook={handleExperienceBook}
-                />
-              ))}
-              {activeTab === 'bike-tours' && bikeTours.map(tour => (
-                <BikeTourCard
-                  key={tour.id}
-                  tour={tour}
-                  onBook={handleBikeTourBook}
-                />
-              ))}
+              {activeTab === 'experiences' && (
+                loadingExperiences ? (
+                  <div className="col-span-full flex justify-center items-center py-12">
+                    <OptimizedGlass intensity="medium" className="p-8 rounded-xl bg-black/30 border border-white/20">
+                      <div className="text-white text-lg font-medium">Loading experiences...</div>
+                    </OptimizedGlass>
+                  </div>
+                ) : (
+                  experiences.map(experience => (
+                    <ExperienceCard
+                      key={experience.id}
+                      experience={experience}
+                      onBook={handleExperienceBook}
+                    />
+                  ))
+                )
+              )}
+              {activeTab === 'bike-tours' && (
+                loadingTours ? (
+                  <div className="col-span-full flex justify-center items-center py-12">
+                    <OptimizedGlass intensity="medium" className="p-8 rounded-xl bg-black/30 border border-white/20">
+                      <div className="text-white text-lg font-medium">Loading bike tours...</div>
+                    </OptimizedGlass>
+                  </div>
+                ) : (
+                  bikeTours.map(tour => (
+                    <BikeTourCard
+                      key={tour.id}
+                      tour={tour}
+                      onBook={handleBikeTourBook}
+                    />
+                  ))
+                )
+              )}
             </motion.div>
           </motion.div>
         </div>
@@ -649,7 +789,7 @@ export const ExploreLadakh = memo(() => {
                   }}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-3"
                 >
-                  Book This Destination - ₹{selectedDestination.price.toLocaleString()}
+                  Book This Destination
                 </Button>
               </div>
             </div>
@@ -665,99 +805,198 @@ export const ExploreLadakh = memo(() => {
         size="large"
         customContent={
           selectedBikeTour && (
-            <div className="p-8">
-              <div className="relative h-64 mb-6 rounded-lg overflow-hidden">
+            <div className="relative max-h-[85vh] flex flex-col bg-gradient-to-br from-slate-900/95 via-blue-900/95 to-purple-900/95 rounded-xl overflow-hidden">
+              {/* Hero Section - Reduced Height */}
+              <div className="relative h-48 flex-shrink-0 overflow-hidden">
                 <OptimizedImage
                   src={selectedBikeTour.image}
                   alt={selectedBikeTour.name}
                   className="w-full h-full object-cover"
                   enableMotion={true}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <div className="absolute bottom-6 left-6 text-white">
-                  <h2 className="text-3xl font-bold mb-2">{selectedBikeTour.name}</h2>
-                  <p className="text-lg text-orange-200">{selectedBikeTour.description}</p>
-                </div>
-                <div className="absolute top-4 right-4">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    selectedBikeTour.difficulty === 'Intermediate' ? 'text-yellow-400 bg-yellow-400/20' :
-                    selectedBikeTour.difficulty === 'Advanced' ? 'text-orange-400 bg-orange-400/20' :
-                    'text-red-400 bg-red-400/20'
-                  }`}>
-                    {selectedBikeTour.difficulty}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-4">Tour Details</h3>
-                  <div className="space-y-3 text-gray-300">
-                    <div className="flex justify-between">
-                      <span>Duration:</span>
-                      <span className="text-white">{selectedBikeTour.duration}</span>
+                {/* Strong overlay for better contrast */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+                
+                {/* Main content overlay */}
+                <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 max-w-2xl">
+                      <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 leading-tight drop-shadow-2xl">
+                        {selectedBikeTour.name}
+                      </h2>
+                      <p className="text-white/95 text-sm md:text-base leading-relaxed drop-shadow-xl line-clamp-2">
+                        {selectedBikeTour.description}
+                      </p>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Distance:</span>
-                      <span className="text-white">{selectedBikeTour.distance}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Difficulty:</span>
-                      <span className={`font-medium ${
-                        selectedBikeTour.difficulty === 'Intermediate' ? 'text-yellow-400' :
-                        selectedBikeTour.difficulty === 'Advanced' ? 'text-orange-400' : 'text-red-400'
-                      }`}>{selectedBikeTour.difficulty}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Rating:</span>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 mr-1" />
-                        <span className="text-white">{selectedBikeTour.rating}</span>
+                    <div className="ml-4 flex flex-col items-end space-y-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-xl border border-white/30 ${
+                        selectedBikeTour.difficulty === 'Intermediate' ? 'bg-yellow-500/90 text-yellow-50' :
+                        selectedBikeTour.difficulty === 'Advanced' ? 'bg-orange-500/90 text-orange-50' :
+                        'bg-red-500/90 text-red-50'
+                      }`}>
+                        {selectedBikeTour.difficulty}
+                      </span>
+                      <div className="flex items-center bg-black/50 backdrop-blur-md border border-yellow-400/50 rounded-full px-3 py-1 shadow-xl">
+                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400 mr-1" />
+                        <span className="text-white font-bold text-sm">{selectedBikeTour.rating}</span>
                       </div>
                     </div>
                   </div>
-
-                  <div className="mt-6">
-                    <h4 className="text-lg font-semibold text-white mb-3">Route</h4>
-                    <p className="text-gray-300 bg-white/5 p-3 rounded-lg text-sm">
-                      {selectedBikeTour.route}
-                    </p>
+                  
+                  {/* Bottom stats - Compact */}
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="bg-black/60 backdrop-blur-md border border-white/30 rounded-lg p-2 text-center shadow-xl">
+                      <Clock className="w-4 h-4 text-blue-400 mx-auto mb-1" />
+                      <p className="text-white font-bold text-xs">{selectedBikeTour.duration}</p>
+                    </div>
+                    <div className="bg-black/60 backdrop-blur-md border border-white/30 rounded-lg p-2 text-center shadow-xl">
+                      <MapPin className="w-4 h-4 text-green-400 mx-auto mb-1" />
+                      <p className="text-white font-bold text-xs">{selectedBikeTour.region || 'Ladakh'}</p>
+                    </div>
+                    <div className="bg-black/60 backdrop-blur-md border border-white/30 rounded-lg p-2 text-center shadow-xl">
+                      <Mountain className="w-4 h-4 text-purple-400 mx-auto mb-1" />
+                      <p className="text-white font-bold text-xs">{selectedBikeTour.route}</p>
+                    </div>
+                    <div className="bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-md border border-orange-400/50 rounded-lg p-2 text-center shadow-xl">
+                      <span className="text-lg font-bold text-white block">₹</span>
+                      <p className="text-white font-bold text-xs">₹{(selectedBikeTour.price || 0).toLocaleString()}</p>
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <h3 className="text-xl font-bold text-white mb-4">Highlights</h3>
-                  <ul className="space-y-2 mb-6">
-                    {selectedBikeTour.highlights.map((highlight, index) => (
-                      <li key={index} className="flex items-center text-gray-300">
-                        <Camera className="w-4 h-4 text-orange-400 mr-2" />
-                        {highlight}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <h4 className="text-lg font-semibold text-white mb-3">Package Includes</h4>
-                  <ul className="space-y-2">
-                    {selectedBikeTour.includes.map((item, index) => (
-                      <li key={index} className="flex items-center text-gray-300">
-                        <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               </div>
 
-              <div className="mt-8 text-center">
-                <Button
-                  onClick={() => {
-                    setShowBookingModal(true);
-                    setSelectedBikeTour(null);
-                  }}
-                  className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 px-8 py-3 text-lg font-bold"
-                >
-                  🏍️ Book This Tour - ₹{selectedBikeTour.price.toLocaleString()}
-                </Button>
+              {/* Scrollable Content Area */}
+              <div className="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-4">
+                {/* Two Column Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Highlights Card */}
+                  <div className="bg-black/40 backdrop-blur-md border border-white/30 rounded-xl p-4 shadow-xl">
+                    <h3 className="text-lg font-bold text-white mb-3 flex items-center drop-shadow-lg">
+                      <Camera className="w-4 h-4 text-orange-400 mr-2" />
+                      Tour Highlights
+                    </h3>
+                    <div className="space-y-2">
+                      {selectedBikeTour.highlights.map((highlight, index) => (
+                        <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 shadow-lg">
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 bg-gradient-to-r from-orange-400 to-red-400 rounded-full mr-2 shadow-md"></div>
+                            <span className="text-white font-medium text-sm drop-shadow-md">{highlight}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Package Includes Card */}
+                  <div className="bg-black/40 backdrop-blur-md border border-white/30 rounded-xl p-4 shadow-xl">
+                    <h3 className="text-lg font-bold text-white mb-3 drop-shadow-lg">Package Includes</h3>
+                    <div className="space-y-2">
+                      {selectedBikeTour.includes.map((item, index) => (
+                        <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 shadow-lg">
+                          <div className="flex items-center">
+                            <div className="w-2 h-2 bg-gradient-to-r from-green-400 to-emerald-400 rounded-full mr-2 shadow-md"></div>
+                            <span className="text-white font-medium text-sm drop-shadow-md">{item}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Itinerary Section */}
+                {selectedBikeTour.itinerary && selectedBikeTour.itinerary.length > 0 && (
+                  <div className="bg-black/40 backdrop-blur-md border border-white/30 rounded-xl p-4 shadow-xl">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-bold text-white drop-shadow-lg">Day-by-Day Itinerary</h3>
+                      <button
+                        onClick={() => setShowItinerary(!showItinerary)}
+                        className="bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/40 rounded-lg px-4 py-2 text-white font-bold transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl text-sm"
+                      >
+                        <span>{showItinerary ? 'Hide Details' : 'View Details'}</span>
+                        <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${showItinerary ? 'rotate-90' : ''}`} />
+                      </button>
+                    </div>
+                    
+                    <div className="text-center mb-4">
+                      <span className="bg-gradient-to-r from-blue-600/90 to-purple-600/90 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-bold border border-blue-400/50 shadow-xl">
+                        {selectedBikeTour.itinerary.length} Days Epic Journey
+                      </span>
+                    </div>
+
+                    {showItinerary && (
+                      <div className="space-y-3 mt-4 max-h-60 overflow-y-auto scrollbar-hide">
+                        {selectedBikeTour.itinerary.map((day, index) => (
+                          <div key={index} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-4 hover:bg-white/15 transition-all duration-200 shadow-lg">
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg flex items-center justify-center shadow-xl border border-orange-400/50">
+                                <span className="text-white font-bold text-sm drop-shadow-lg">{day.day}</span>
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="text-base font-bold text-white mb-1 drop-shadow-md">{day.title}</h4>
+                                <p className="text-white/90 mb-2 leading-relaxed drop-shadow-sm text-sm line-clamp-2">{day.description}</p>
+                                
+                                {day.activities && day.activities.length > 0 && (
+                                  <div className="mb-2">
+                                    <div className="flex flex-wrap gap-1">
+                                      {day.activities.slice(0, 2).map((activity, actIndex) => (
+                                        <span key={actIndex} className="bg-orange-500/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs border border-orange-400/50 font-medium shadow-md">
+                                          {activity}
+                                        </span>
+                                      ))}
+                                      {day.activities.length > 2 && (
+                                        <span className="bg-gray-500/80 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs border border-gray-400/50 font-medium shadow-md">
+                                          +{day.activities.length - 2} more
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                <div className="grid grid-cols-3 gap-2 text-xs">
+                                  {day.accommodation && (
+                                    <div className="bg-white/10 backdrop-blur-sm rounded p-2 border border-white/20 shadow-md">
+                                      <span className="text-blue-300 text-xs uppercase tracking-wide font-bold block">Stay</span>
+                                      <p className="text-white font-medium drop-shadow-sm">{day.accommodation}</p>
+                                    </div>
+                                  )}
+                                  {day.distance && (
+                                    <div className="bg-white/10 backdrop-blur-sm rounded p-2 border border-white/20 shadow-md">
+                                      <span className="text-green-300 text-xs uppercase tracking-wide font-bold block">Distance</span>
+                                      <p className="text-white font-medium drop-shadow-sm">{day.distance}</p>
+                                    </div>
+                                  )}
+                                  {day.altitude && (
+                                    <div className="bg-white/10 backdrop-blur-sm rounded p-2 border border-white/20 shadow-md">
+                                      <span className="text-purple-300 text-xs uppercase tracking-wide font-bold block">Altitude</span>
+                                      <p className="text-white font-medium drop-shadow-sm">{day.altitude}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Book Now Section - Compact */}
+                <div className="bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-md border border-orange-400/50 rounded-xl p-4 shadow-2xl">
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold text-white mb-2 drop-shadow-xl">Ready for the Adventure?</h3>
+                    <p className="text-orange-100 mb-4 text-sm drop-shadow-lg">Secure your spot on this epic Himalayan journey</p>
+                    <Button
+                      onClick={() => {
+                        setShowBookingModal(true);
+                        setSelectedBikeTour(null);
+                      }}
+                      className="bg-white/30 hover:bg-white/40 backdrop-blur-md border-2 border-white/60 px-6 py-3 text-lg font-bold rounded-xl shadow-2xl transition-all duration-200 hover:scale-105 text-white hover:shadow-3xl"
+                    >
+                      🏍️ Book Tour - ₹{(selectedBikeTour.price || 0).toLocaleString()}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           )

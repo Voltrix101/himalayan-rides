@@ -3,23 +3,23 @@ import { motion } from 'framer-motion';
 import { X, Save, Plus } from 'lucide-react';
 import { Button } from '../../ui/Button';
 import { OptimizedGlass } from '../../ui/OptimizedGlass';
-import { CuratedExperience } from '../../../types/curatedExperience';
+import { Experience, adminFirebaseService } from '../../../services/adminFirebaseService';
 import { ImageUploader } from './ImageUploader';
+import toast from 'react-hot-toast';
 
 interface ExperienceFormProps {
   isOpen: boolean;
   onClose: () => void;
-  experience?: CuratedExperience | null;
+  experience?: Experience | null;
   mode: 'create' | 'edit';
-  onSubmit: (payload: Omit<CuratedExperience, 'id'> | Partial<CuratedExperience>) => Promise<void>;
 }
 
-export function ExperienceForm({ isOpen, onClose, experience, mode, onSubmit }: ExperienceFormProps) {
-  const [formData, setFormData] = useState<Omit<CuratedExperience, 'id'>>({
+export function ExperienceForm({ isOpen, onClose, experience, mode }: ExperienceFormProps) {
+  const [formData, setFormData] = useState<Omit<Experience, 'id' | 'createdAt' | 'updatedAt'>>({
     title: '',
     description: '',
     price: 0,
-    days: 1,
+    duration: '1 Day',
     highlights: [],
     image: '',
     category: 'Adventure',
@@ -27,8 +27,10 @@ export function ExperienceForm({ isOpen, onClose, experience, mode, onSubmit }: 
     inclusions: [],
     exclusions: [],
     difficulty: 'Easy',
-    maxParticipants: 10,
-    itinerary: []
+    maxGroupSize: 10,
+    bestTime: 'Year Round',
+    location: 'Ladakh',
+    isActive: true
   });
 
   const [newHighlight, setNewHighlight] = useState('');
@@ -38,13 +40,40 @@ export function ExperienceForm({ isOpen, onClose, experience, mode, onSubmit }: 
 
   useEffect(() => {
     if (experience && mode === 'edit') {
-      const { id, ...rest } = experience;
-      setFormData(rest);
+      setFormData({
+        title: experience.title,
+        description: experience.description,
+        price: experience.price,
+        duration: experience.duration,
+        highlights: experience.highlights,
+        image: experience.image,
+        category: experience.category,
+        rating: experience.rating,
+        inclusions: experience.inclusions,
+        exclusions: experience.exclusions,
+        difficulty: experience.difficulty,
+        maxGroupSize: experience.maxGroupSize,
+        bestTime: experience.bestTime,
+        location: experience.location,
+        isActive: experience.isActive
+      });
     } else if (mode === 'create') {
       setFormData({
-        title: '', description: '', price: 0, days: 1, highlights: [], image: '',
-        category: 'Adventure', rating: 4.5, inclusions: [], exclusions: [],
-        difficulty: 'Easy', maxParticipants: 10, itinerary: []
+        title: '', 
+        description: '', 
+        price: 0, 
+        duration: '1 Day', 
+        highlights: [], 
+        image: '',
+        category: 'Adventure', 
+        rating: 4.5, 
+        inclusions: [], 
+        exclusions: [],
+        difficulty: 'Easy', 
+        maxGroupSize: 10, 
+        bestTime: 'Year Round',
+        location: 'Ladakh',
+        isActive: true
       });
     }
   }, [experience, mode, isOpen]);
@@ -61,9 +90,19 @@ export function ExperienceForm({ isOpen, onClose, experience, mode, onSubmit }: 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
     try {
-      await onSubmit(mode === 'create' ? formData : { id: (experience as any).id, ...formData });
+      if (mode === 'create') {
+        await adminFirebaseService.createExperience(formData);
+        toast.success('Experience created successfully!');
+      } else if (mode === 'edit' && experience?.id) {
+        await adminFirebaseService.updateExperience(experience.id, formData);
+        toast.success('Experience updated successfully!');
+      }
       onClose();
+    } catch (error) {
+      console.error('Error submitting experience:', error);
+      toast.error('Failed to save experience. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -93,8 +132,8 @@ export function ExperienceForm({ isOpen, onClose, experience, mode, onSubmit }: 
                 <input type="number" className="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) })} min={0} required />
               </div>
               <div>
-                <label className="block text-white/90 mb-2">Days</label>
-                <input type="number" className="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white" value={formData.days} onChange={(e) => setFormData({ ...formData, days: parseInt(e.target.value) })} min={1} required />
+                <label className="block text-white/90 mb-2">Duration</label>
+                <input type="text" className="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} placeholder="e.g., 3 Days, 1 Week" required />
               </div>
               <div>
                 <label className="block text-white/90 mb-2">Category</label>
@@ -130,6 +169,33 @@ export function ExperienceForm({ isOpen, onClose, experience, mode, onSubmit }: 
             <div>
               <label className="block text-white/90 mb-2">Description</label>
               <textarea className="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white h-28 resize-none" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} required />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-white/90 mb-2">Max Group Size</label>
+                <input type="number" className="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white" value={formData.maxGroupSize} onChange={(e) => setFormData({ ...formData, maxGroupSize: parseInt(e.target.value) })} min={1} required />
+              </div>
+              <div>
+                <label className="block text-white/90 mb-2">Best Time</label>
+                <input type="text" className="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white" value={formData.bestTime} onChange={(e) => setFormData({ ...formData, bestTime: e.target.value })} placeholder="e.g., March to June" required />
+              </div>
+              <div>
+                <label className="block text-white/90 mb-2">Location</label>
+                <input type="text" className="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} required />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-white/90">
+                <input 
+                  type="checkbox" 
+                  checked={formData.isActive} 
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+                  className="w-4 h-4 rounded bg-white/10 border border-white/20 text-purple-600 focus:ring-purple-500"
+                />
+                Active Experience
+              </label>
             </div>
 
             <div>

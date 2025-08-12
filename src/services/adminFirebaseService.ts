@@ -108,6 +108,27 @@ export interface BikeTour {
   updatedAt: Timestamp;
 }
 
+export interface Experience {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  duration: string; // e.g., "2 Days", "5 Days"
+  price: number;
+  rating: number;
+  category: 'Adventure' | 'Cultural' | 'Spiritual' | 'Photography';
+  highlights: string[];
+  inclusions: string[];
+  exclusions: string[];
+  maxGroupSize: number;
+  difficulty: 'Easy' | 'Moderate' | 'Challenging';
+  bestTime: string;
+  location: string;
+  isActive: boolean;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 export interface Booking {
   id: string;
   userId: string;
@@ -395,6 +416,77 @@ class AdminFirebaseService {
     } catch (error) {
       console.error('Error deleting bike tour:', error);
       toast.error('Failed to delete bike tour');
+      throw error;
+    }
+  }
+
+  // =============================================================================
+  // EXPERIENCE MANAGEMENT
+  // =============================================================================
+
+  async getExperiences(callback: (experiences: Experience[]) => void) {
+    const experiencesRef = collection(db, 'experiences');
+    const q = query(experiencesRef, orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const experiences: Experience[] = [];
+      snapshot.forEach((doc) => {
+        experiences.push({ id: doc.id, ...doc.data() } as Experience);
+      });
+      callback(experiences);
+    }, (error) => {
+      console.error('Error fetching experiences:', error);
+      toast.error('Failed to fetch experiences');
+    });
+
+    this.listeners.push(unsubscribe);
+    return unsubscribe;
+  }
+
+  async createExperience(experienceData: Omit<Experience, 'id' | 'createdAt' | 'updatedAt'>) {
+    try {
+      const experiencesRef = collection(db, 'experiences');
+      const newExperience = {
+        ...experienceData,
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now()
+      };
+      
+      const docRef = await addDoc(experiencesRef, newExperience);
+      toast.success('Experience created successfully');
+      return docRef.id;
+    } catch (error) {
+      console.error('Error creating experience:', error);
+      toast.error('Failed to create experience');
+      throw error;
+    }
+  }
+
+  async updateExperience(experienceId: string, experienceData: Partial<Experience>) {
+    try {
+      const experienceRef = doc(db, 'experiences', experienceId);
+      const updateData = {
+        ...experienceData,
+        updatedAt: Timestamp.now()
+      };
+      
+      await updateDoc(experienceRef, updateData);
+      toast.success('Experience updated successfully');
+    } catch (error) {
+      console.error('Error updating experience:', error);
+      toast.error('Failed to update experience');
+      throw error;
+    }
+  }
+
+  async deleteExperience(experienceId: string) {
+    try {
+      const experienceRef = doc(db, 'experiences', experienceId);
+      await deleteDoc(experienceRef);
+      toast.success('Experience deleted successfully');
+    } catch (error) {
+      console.error('Error deleting experience:', error);
+      toast.error('Failed to delete experience');
       throw error;
     }
   }
