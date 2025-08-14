@@ -87,7 +87,7 @@ const ModalLoader = memo(() => (
 ModalLoader.displayName = 'ModalLoader';
 
 // Render modal content based on type
-const renderModalContent = (type: ModalType, data: any, customContent?: React.ReactNode) => {
+const renderModalContent = (type: ModalType, data: any, customContent?: React.ReactNode, onClose?: () => void) => {
   if (customContent) {
     return customContent;
   }
@@ -120,7 +120,7 @@ const renderModalContent = (type: ModalType, data: any, customContent?: React.Re
     case 'success':
       return (
         <Suspense fallback={<ModalLoader />}>
-          <SuccessContent {...data} />
+          <SuccessContent bookingData={data} onClose={onClose} />
         </Suspense>
       );
     default:
@@ -235,7 +235,7 @@ export const UniversalModal = memo<UniversalModalProps>(({
 
               {/* Modal Content */}
               <div className="relative">
-                {renderModalContent(type, data, customContent)}
+                {renderModalContent(type, data, customContent, onClose)}
               </div>
             </OptimizedGlass>
           </motion.div>

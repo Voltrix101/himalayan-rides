@@ -1,7 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 // Firebase configuration
 // Your actual Firebase config from Firebase Console
@@ -27,26 +28,18 @@ export const db = getFirestore(app);
 // Initialize Cloud Storage and get a reference to the service
 export const storage = getStorage(app);
 
-// Emulator connections disabled - using production Firebase services
-// If you want to use emulators, set up Firebase emulators and uncomment below:
-/*
-if (import.meta.env.DEV) {
+// Initialize Cloud Functions and get a reference to the service
+export const functions = getFunctions(app);
+
+// Connect to emulators in development - TEMPORARILY DISABLED FOR PRODUCTION TESTING
+if (false && import.meta.env.MODE === 'development') {
   try {
-    // Connect to Auth emulator if available
-    connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
+    // Connect to Functions emulator
+    connectFunctionsEmulator(functions, 'localhost', 5001);
+    console.log('Connected to Functions emulator');
   } catch (error) {
-    // Emulator may already be connected or not available
-    console.log('Auth emulator connection skipped');
-  }
-  
-  try {
-    // Connect to Firestore emulator if available
-    connectFirestoreEmulator(db, 'localhost', 8080);
-  } catch (error) {
-    // Emulator may already be connected or not available
-    console.log('Firestore emulator connection skipped');
+    console.log('Functions emulator connection skipped:', error);
   }
 }
-*/
 
 export default app;

@@ -12,8 +12,12 @@ import { OptimizedGlass } from '../ui/OptimizedGlass';
 import { OptimizedImage } from '../ui/OptimizedImage';
 import { Button } from '../ui/Button';
 import { UniversalModal } from '../ui/UniversalModal';
+import { ExperienceBookingModal } from '../booking/ExperienceBookingModal';
+import { BikeTourBookingModal } from '../booking/BikeTourBookingModal.tsx';
 import { useOptimizedScroll } from '../../hooks/useOptimizedScroll';
 import { adminFirebaseService, BikeTour as AdminBikeTour, Experience as AdminExperience } from '../../services/adminFirebaseService';
+import { explorePlansService } from '../../services/explorePlansService';
+import { ExplorePlan } from '../../types';
 
 // Types - exactly matching deployed website
 interface Destination {
@@ -30,19 +34,10 @@ interface Destination {
   rating: number;
 }
 
-interface Experience {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  duration: string;
-  price: number;
-  rating: number;
-  category: 'Adventure' | 'Cultural' | 'Spiritual' | 'Photography';
-  highlights: string[];
-}
+// Use admin service types
+type Experience = AdminExperience;
 
-interface BikeTour {
+interface LocalBikeTour {
   id: string;
   name: string;
   description: string;
@@ -68,8 +63,8 @@ interface BikeTour {
   region?: string;
 }
 
-// Performance-optimized data
-const destinations: Destination[] = [
+// Performance-optimized data - fallback destinations
+const originalDestinations: Destination[] = [
   {
     id: 'pangong',
     name: 'Pangong Tso',
@@ -124,32 +119,9 @@ const destinations: Destination[] = [
   }
 ];
 
-const originalExperiences: Experience[] = [
-  {
-    id: 'monastery-tour',
-    title: 'Ancient Monasteries Tour',
-    description: 'Explore centuries-old Buddhist monasteries and immerse in spiritual culture.',
-    image: 'https://images.pexels.com/photos/6176940/pexels-photo-6176940.jpeg?auto=compress&cs=tinysrgb&w=600',
-    duration: '2 Days',
-    price: 8000,
-    rating: 4.5,
-    category: 'Cultural',
-    highlights: ['Hemis Monastery', 'Thiksey Monastery', 'Cultural immersion']
-  },
-  {
-    id: 'photography-expedition',
-    title: 'Ladakh Photography Expedition',
-    description: 'Capture the raw beauty of Ladakh with professional photography guidance.',
-    image: 'https://images.pexels.com/photos/2613260/pexels-photo-2613260.jpeg?auto=compress&cs=tinysrgb&w=600',
-    duration: '5 Days',
-    price: 25000,
-    rating: 4.8,
-    category: 'Photography',
-    highlights: ['Golden hour shots', 'Landscape photography', 'Expert guidance']
-  }
-];
+// Legacy experiences removed - now loading from Firebase admin service
 
-const originalBikeTours: BikeTour[] = [
+const originalBikeTours: LocalBikeTour[] = [
   {
     id: 'leh-ladakh-ultimate',
     name: 'Leh-Ladakh Ultimate Adventure',
@@ -361,8 +333,8 @@ ExperienceCard.displayName = 'ExperienceCard';
 
 // Memoized bike tour card component
 const BikeTourCard = memo<{
-  tour: BikeTour;
-  onBook: (tour: BikeTour) => void;
+  tour: LocalBikeTour;
+  onBook: (tour: LocalBikeTour) => void;
 }>(({ tour, onBook }) => {
   const handleBook = useCallback(() => {
     onBook(tour);
@@ -456,15 +428,65 @@ BikeTourCard.displayName = 'BikeTourCard';
 // Main ExploreLadakh component - optimized version
 export const ExploreLadakh = memo(() => {
   const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
-  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showExperienceBookingModal, setShowExperienceBookingModal] = useState(false);
+  const [showBikeTourBookingModal, setShowBikeTourBookingModal] = useState(false);
   const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
-  const [selectedBikeTour, setSelectedBikeTour] = useState<BikeTour | null>(null);
+  const [selectedBikeTour, setSelectedBikeTour] = useState<LocalBikeTour | null>(null);
   const [activeTab, setActiveTab] = useState<'destinations' | 'experiences' | 'bike-tours'>('destinations');
-  const [bikeTours, setBikeTours] = useState<BikeTour[]>([]);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [loadingDestinations, setLoadingDestinations] = useState(true);
+  const [bikeTours, setBikeTours] = useState<LocalBikeTour[]>([]);
   const [loadingTours, setLoadingTours] = useState(true);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loadingExperiences, setLoadingExperiences] = useState(true);
   const [showItinerary, setShowItinerary] = useState(false);
+
+  // Load destinations from Firebase (ExplorePlans)
+  useEffect(() => {
+    setLoadingDestinations(true);
+    
+    const loadDestinations = async () => {
+      try {
+        const unsubscribe = explorePlansService.subscribeToExplorePlans((explorePlans: ExplorePlan[]) => {
+          try {
+            // Convert ExplorePlans to Destinations format
+            const convertedDestinations: Destination[] = explorePlans
+              .filter((plan: ExplorePlan) => plan.title && plan.description) // Filter out invalid entries
+              .map((plan: ExplorePlan) => ({
+                id: plan.id,
+                name: plan.title,
+                description: plan.description,
+                image: plan.coverImage || 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+                altitude: '4,000m+', // Default since ExplorePlan doesn't have altitude
+                bestTime: plan.bestTime || 'May - September',
+                difficulty: (plan.difficulty as 'Easy' | 'Moderate' | 'Challenging') || 'Moderate',
+                highlights: plan.highlights || [],
+                distance: plan.duration || 'Distance varies',
+                price: 15000, // Default price since ExplorePlan doesn't have price
+                rating: 4.5 // Default rating
+              }));
+            
+            setDestinations(convertedDestinations);
+            setLoadingDestinations(false);
+          } catch (error) {
+            console.error('Error converting explore plans:', error);
+            // Fallback to original hardcoded destinations if conversion fails
+            setDestinations(originalDestinations);
+            setLoadingDestinations(false);
+          }
+        });
+
+        return unsubscribe;
+      } catch (error) {
+        console.error('Error loading destinations:', error);
+        setDestinations(originalDestinations);
+        setLoadingDestinations(false);
+        return () => {};
+      }
+    };
+
+    loadDestinations();
+  }, []);
 
   // Load bike tours from Firebase
   useEffect(() => {
@@ -475,7 +497,7 @@ export const ExploreLadakh = memo(() => {
         const unsubscribe = await adminFirebaseService.getBikeTours((adminTours: AdminBikeTour[]) => {
           try {
             // Filter out invalid tours and convert admin tours to component format
-            const convertedTours: BikeTour[] = adminTours
+            const convertedTours: LocalBikeTour[] = adminTours
               .filter((tour: AdminBikeTour) => tour.name && tour.pricePerPerson) // Filter out invalid entries
               .map((tour: AdminBikeTour) => ({
                 id: tour.id,
@@ -529,27 +551,15 @@ export const ExploreLadakh = memo(() => {
       try {
         const unsubscribe = await adminFirebaseService.getExperiences((adminExperiences: AdminExperience[]) => {
           try {
-            // Filter out invalid experiences and convert admin experiences to component format
-            const convertedExperiences: Experience[] = adminExperiences
-              .filter((exp: AdminExperience) => exp.title && exp.price) // Filter out invalid entries
-              .map((exp: AdminExperience) => ({
-                id: exp.id,
-                title: exp.title,
-                description: exp.description,
-                image: exp.image || 'https://images.pexels.com/photos/6176940/pexels-photo-6176940.jpeg?auto=compress&cs=tinysrgb&w=600',
-                duration: exp.duration,
-                price: exp.price || 0,
-                rating: exp.rating || 4.5,
-                category: exp.category,
-                highlights: exp.highlights || []
-              }));
+            // Use admin experiences directly since Experience = AdminExperience now
+            const validExperiences = adminExperiences.filter((exp: AdminExperience) => exp.title && exp.price);
             
-            setExperiences(convertedExperiences);
+            console.log('Experiences loaded:', validExperiences.length);
+            setExperiences(validExperiences);
             setLoadingExperiences(false);
           } catch (error) {
-            console.error('Error converting experiences:', error);
-            // Fallback to original hardcoded experiences if conversion fails
-            setExperiences(originalExperiences);
+            console.error('Error loading experiences:', error);
+            setExperiences([]);
             setLoadingExperiences(false);
           }
         });
@@ -560,7 +570,7 @@ export const ExploreLadakh = memo(() => {
         };
       } catch (error) {
         console.error('Error setting up experiences listener:', error);
-        setExperiences(originalExperiences);
+        setExperiences([]);
         setLoadingExperiences(false);
       }
     };
@@ -580,20 +590,20 @@ export const ExploreLadakh = memo(() => {
 
   const handleExperienceBook = useCallback((experience: Experience) => {
     setSelectedExperience(experience);
-    setShowBookingModal(true);
+    setShowExperienceBookingModal(true);
   }, []);
 
-  const handleBikeTourBook = useCallback((tour: BikeTour) => {
+  const handleBikeTourBook = useCallback((tour: LocalBikeTour) => {
     setSelectedBikeTour(tour);
     // Only show the tour details modal, not the booking modal
   }, []);
 
   const handleCloseModal = useCallback(() => {
     setSelectedDestination(null);
-    setShowBookingModal(false);
     setSelectedExperience(null);
     setSelectedBikeTour(null);
     setShowItinerary(false);
+    setShowExperienceBookingModal(false);
   }, []);
 
   const handleTabChange = useCallback((tab: 'destinations' | 'experiences' | 'bike-tours') => {
@@ -673,13 +683,23 @@ export const ExploreLadakh = memo(() => {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12"
             >
-              {activeTab === 'destinations' && destinations.map(destination => (
-                <DestinationCard
-                  key={destination.id}
-                  destination={destination}
-                  onSelect={handleDestinationSelect}
-                />
-              ))}
+              {activeTab === 'destinations' && (
+                loadingDestinations ? (
+                  <div className="col-span-full flex justify-center items-center py-12">
+                    <OptimizedGlass intensity="medium" className="p-8 rounded-xl bg-black/30 border border-white/20">
+                      <div className="text-white text-lg font-medium">Loading destinations...</div>
+                    </OptimizedGlass>
+                  </div>
+                ) : (
+                  destinations.map(destination => (
+                    <DestinationCard
+                      key={destination.id}
+                      destination={destination}
+                      onSelect={handleDestinationSelect}
+                    />
+                  ))
+                )
+              )}
               {activeTab === 'experiences' && (
                 loadingExperiences ? (
                   <div className="col-span-full flex justify-center items-center py-12">
@@ -784,8 +804,8 @@ export const ExploreLadakh = memo(() => {
               <div className="mt-8 text-center">
                 <Button
                   onClick={() => {
-                    setShowBookingModal(true);
-                    setSelectedDestination(null);
+                    // TODO: Implement destination booking modal
+                    console.log('Destination booking not implemented yet');
                   }}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-3"
                 >
@@ -981,26 +1001,39 @@ export const ExploreLadakh = memo(() => {
                   </div>
                 )}
 
-                {/* Book Now Section - Compact */}
-                <div className="bg-gradient-to-r from-orange-600/90 to-red-600/90 backdrop-blur-md border border-orange-400/50 rounded-xl p-4 shadow-2xl">
-                  <div className="text-center">
-                    <h3 className="text-xl font-bold text-white mb-2 drop-shadow-xl">Ready for the Adventure?</h3>
-                    <p className="text-orange-100 mb-4 text-sm drop-shadow-lg">Secure your spot on this epic Himalayan journey</p>
-                    <Button
-                      onClick={() => {
-                        setShowBookingModal(true);
-                        setSelectedBikeTour(null);
-                      }}
-                      className="bg-white/30 hover:bg-white/40 backdrop-blur-md border-2 border-white/60 px-6 py-3 text-lg font-bold rounded-xl shadow-2xl transition-all duration-200 hover:scale-105 text-white hover:shadow-3xl"
-                    >
-                      🏍️ Book Tour - ₹{(selectedBikeTour.price || 0).toLocaleString()}
-                    </Button>
-                  </div>
+                {/* Book Tour Button */}
+                <div className="mt-6">
+                  <Button
+                    onClick={() => setShowBikeTourBookingModal(true)}
+                    className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold py-4 px-6 text-lg rounded-xl shadow-2xl transition-all duration-200 hover:scale-105 border-2 border-orange-400/50"
+                  >
+                    🏍️ Book This Adventure - ₹{(selectedBikeTour.price || 0).toLocaleString()}
+                  </Button>
                 </div>
               </div>
             </div>
           )
         }
+      />
+
+      {/* Experience Booking Modal */}
+      <ExperienceBookingModal
+        experience={selectedExperience}
+        isOpen={showExperienceBookingModal}
+        onClose={() => {
+          setShowExperienceBookingModal(false);
+          setSelectedExperience(null);
+        }}
+      />
+
+      {/* Bike Tour Booking Modal */}
+      <BikeTourBookingModal
+        bikeTour={selectedBikeTour}
+        isOpen={showBikeTourBookingModal}
+        onClose={() => {
+          setShowBikeTourBookingModal(false);
+          setSelectedBikeTour(null);
+        }}
       />
     </>
   );

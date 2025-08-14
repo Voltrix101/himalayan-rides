@@ -1,31 +1,42 @@
 import React from 'react';
+import { motion } from 'framer-motion';
+import { Shield, User } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { isCurrentUserAdmin } from '../utils/adminUtils';
 
-/**
- * Admin Status Indicator Component
- * Shows current admin status for debugging purposes
- */
 export const AdminStatusIndicator: React.FC = () => {
   const { user } = useAuth();
-  const isAdmin = isCurrentUserAdmin(user);
+  const isAdmin = user ? isCurrentUserAdmin(user) : false;
 
-  if (process.env.NODE_ENV !== 'development') {
-    return null;
-  }
+  if (!user) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 bg-black/80 backdrop-blur-md rounded-lg p-3 text-white text-xs z-50">
-      <div className="font-bold mb-1">User Status</div>
-      <div>Email: {user?.email || 'Not logged in'}</div>
-      <div className={`font-bold ${isAdmin ? 'text-green-400' : 'text-gray-400'}`}>
-        Admin: {isAdmin ? '✅ Yes' : '❌ No'}
-      </div>
-      {isAdmin && (
-        <div className="text-xs text-green-300 mt-1">
-          Performance monitor visible
+    <motion.div
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="fixed top-4 right-4 z-50"
+    >
+      <div className={`
+        px-3 py-2 rounded-lg backdrop-blur-sm border
+        ${isAdmin 
+          ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300' 
+          : 'bg-blue-500/20 border-blue-400/30 text-blue-300'
+        }
+      `}>
+        <div className="flex items-center gap-2 text-sm font-medium">
+          {isAdmin ? (
+            <>
+              <Shield className="w-4 h-4" />
+              <span>Admin</span>
+            </>
+          ) : (
+            <>
+              <User className="w-4 h-4" />
+              <span>User</span>
+            </>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </motion.div>
   );
 };

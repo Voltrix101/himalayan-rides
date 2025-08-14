@@ -7,6 +7,10 @@ export function useAppNavigation() {
     navigate('/trips');
   };
 
+  const navigateToMyTrips = () => {
+    navigate('/my-trips');
+  };
+
   const navigateToExplore = () => {
     navigate('/explore');
   };
@@ -29,6 +33,7 @@ export function useAppNavigation() {
 
   return {
     navigateToTrips,
+    navigateToMyTrips,
     navigateToExplore,
     navigateToFleet,
     navigateToHome,

@@ -9,8 +9,10 @@ import { optimizedFirestore } from './utils/firebaseOptimizer';
 import { useAuth } from './hooks/useAuth';
 import { isCurrentUserAdmin } from './utils/adminUtils';
 import { AdminStatusIndicator } from './components/AdminStatusIndicator';
+import { AdminButton } from './components/AdminButton';
 import { Toaster } from 'react-hot-toast';
 import { useState, useCallback, useEffect } from 'react';
+// import './utils/testFirebaseConnection'; // Auto-run production Firebase test
 
 // Lazy load components for better performance
 const RegionSelector = lazy(() => import('./components/home/RegionSelector').then(m => ({ default: m.RegionSelector })));
@@ -19,6 +21,7 @@ const Dashboard = lazy(() => import('./components/dashboard/Dashboard').then(m =
 const OptimizedExploreLadakh = lazy(() => import('./components/explore/OptimizedExploreLadakh'));
 const YourTrips = lazy(() => import('./components/trips/YourTrips').then(m => ({ default: m.YourTrips })));
 const EnhancedAdminDashboard = lazy(() => import('./components/admin/EnhancedAdminDashboard'));
+const FirebaseTestPage = lazy(() => import('./pages/FirebaseTestPage').then(m => ({ default: m.default })));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -150,6 +153,7 @@ function AppContent() {
               {/* Public Routes */}
               <Route path="/" element={<RegionSelector />} />
               <Route path="/explore" element={<OptimizedExploreLadakh />} />
+              <Route path="/test" element={<FirebaseTestPage />} />
               
               {/* Protected Routes */}
               <Route 
@@ -218,6 +222,9 @@ function AppContent() {
 
       {/* Admin Status Indicator */}
       <AdminStatusIndicator />
+
+      {/* Admin Button */}
+      <AdminButton />
       
       <Toaster 
         position="top-right"

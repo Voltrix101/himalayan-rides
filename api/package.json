@@ -1,0 +1,26 @@
+{
+  "name": "himalayan-rides-api",
+  "version": "1.0.0",
+  "description": "Vercel Serverless Functions for Himalayan Rides",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "razorpay": "^2.9.6",
+    "nodemailer": "^7.0.5",
+    "pdfkit": "^0.17.1",
+    "cors": "^2.8.5",
+    "@vercel/node": "^3.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/nodemailer": "^6.4.17",
+    "@types/pdfkit": "^0.17.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

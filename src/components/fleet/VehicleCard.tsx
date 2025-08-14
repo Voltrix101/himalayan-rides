@@ -4,7 +4,7 @@ import { Vehicle } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { GlassCard } from '../ui/GlassCard';
 import { Button } from '../ui/Button';
-import { UniversalBookingModal } from '../booking/UniversalBookingModal';
+import { UniversalModal } from '../ui/UniversalModal';
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -82,7 +82,7 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
         </div>
       </GlassCard>
 
-      <UniversalBookingModal
+      <UniversalModal
         isOpen={showBookingModal}
         onClose={() => setShowBookingModal(false)}
         item={{

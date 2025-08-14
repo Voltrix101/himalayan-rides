@@ -1,8 +1,33 @@
 import { memo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, MapPin, Clock, Users, Mountain, Route, Star, Camera, Utensils, Bed } from 'lucide-react';
+import { MapPin, Clock, Mountain, Route, Star, Camera } from 'lucide-react';
+import { httpsCallable } from 'firebase/functions';
 import { OptimizedGlass } from '../ui/OptimizedGlass';
 import { Button } from '../ui/Button';
+import { useApp } from '../../context/AppContext';
+import { razorpayService, type BookingData, type RazorpayPaymentData } from '../../services/razorpayService';
+import { functions } from '../../config/firebase';
+import UniversalModal from '../ui/UniversalModal';
+import toast from 'react-hot-toast';
+
+interface Tour {
+  id: number | string;
+  name: string;
+  duration: string;
+  distance: string;
+  difficulty: string;
+  price: string | number;
+  rating: number;
+  image: string;
+  highlights: string[];
+  includes: string[];
+  route: string;
+}
+
+interface TourModalContentProps {
+  preSelectedTour?: Tour;
+  autoOpenBooking?: boolean;
+}
 
 // Popular bike tour packages
 const bikeTours = [
@@ -54,20 +79,31 @@ const comingSoonTours = [
   }
 ];
 
-const TourModalContent = memo(() => {
-  const [selectedTour, setSelectedTour] = useState(bikeTours[0]);
-  const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'booking'>('overview');
+const TourModalContent = memo<TourModalContentProps>(({ preSelectedTour, autoOpenBooking = false }) => {
+  const { state } = useApp();
+  const [selectedTour, setSelectedTour] = useState<Tour>(preSelectedTour || bikeTours[0]);
+  const [activeTab, setActiveTab] = useState<'overview' | 'itinerary' | 'booking'>(autoOpenBooking ? 'booking' : 'overview');
   const [bookingData, setBookingData] = useState({
     startDate: '',
     participants: 1,
     bikePreference: 'Royal Enfield 350',
-    addOns: [] as string[]
+    addOns: [] as string[],
+    phone: state.user?.phone || '',
+    emergencyContact: {
+      name: '',
+      phone: '',
+      relationship: 'spouse'
+    }
   });
+  const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successBookingData, setSuccessBookingData] = useState<any>(null);
 
-  const handleBooking = useCallback(() => {
-    console.log('Booking tour:', selectedTour.name, bookingData);
-    // Here you would integrate with your booking system
-  }, [selectedTour, bookingData]);
+  // Helper function to parse price from string or number
+  const parsePrice = (price: string | number): number => {
+    if (typeof price === 'number') return price;
+    return parseInt(price.replace('₹', '').replace(',', ''));
+  };
 
   const addOns = [
     { id: 'photography', name: 'Professional Photography', price: '₹15,000' },
@@ -75,6 +111,100 @@ const TourModalContent = memo(() => {
     { id: 'meals', name: 'Gourmet Meal Package', price: '₹12,000' },
     { id: 'insurance', name: 'Travel Insurance', price: '₹5,000' }
   ];
+
+  const handleBooking = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      // Validation
+      if (!bookingData.startDate || !bookingData.phone) {
+        toast.error('Please fill in all required fields');
+        return;
+      }
+
+      if (!state.user) {
+        toast.error('Please login to make a booking');
+        return;
+      }
+
+      // Calculate total price
+      const basePrice = parsePrice(selectedTour.price);
+      const addOnPrice = bookingData.addOns.reduce((total, addOnId) => {
+        const addOn = addOns.find(a => a.id === addOnId);
+        return total + (addOn ? parseInt(addOn.price.replace('₹', '').replace(',', '')) : 0);
+      }, 0);
+      const totalAmount = (basePrice + addOnPrice) * bookingData.participants;
+
+      const bookingPayload: BookingData = {
+        experienceId: selectedTour.id.toString(),
+        experienceTitle: selectedTour.name,
+        customerName: state.user.name || state.user.email || 'Customer',
+        email: state.user.email || '',
+        phone: bookingData.phone,
+        participants: bookingData.participants,
+        startDate: new Date(bookingData.startDate),
+        totalAmount: totalAmount,
+        pickupLocation: 'Delhi (as per tour route)',
+        specialRequests: `Bike preference: ${bookingData.bikePreference}. Add-ons: ${bookingData.addOns.join(', ')}`,
+        emergencyContact: bookingData.emergencyContact.name ? bookingData.emergencyContact : undefined,
+      };
+
+      // Create Razorpay order
+      const orderData = await razorpayService.createOrder(bookingPayload, state.user.id);
+
+      // Open Razorpay checkout
+      await razorpayService.openCheckout(
+        orderData,
+        bookingPayload,
+        async (paymentData: RazorpayPaymentData) => {
+          // Payment successful
+          setLoading(false);
+          
+          // Prepare success modal data
+          const successData = {
+            bookingId: paymentData.razorpay_order_id,
+            type: 'tour' as const,
+            title: selectedTour.name,
+            totalAmount: totalAmount,
+            participants: bookingData.participants,
+            startDate: bookingData.startDate,
+            customerEmail: state.user?.email || '',
+            customerName: state.user?.name || state.user?.email || 'Customer',
+          };
+          
+          setSuccessBookingData(successData);
+          
+          // Send booking confirmation email
+          try {
+            const sendConfirmationFunction = httpsCallable(functions, 'sendBookingConfirmation');
+            await sendConfirmationFunction({
+              paymentId: paymentData.razorpay_payment_id,
+              orderId: paymentData.razorpay_order_id
+            });
+            console.log('Booking confirmation email sent successfully');
+          } catch (error) {
+            console.error('Error sending booking confirmation email:', error);
+            // Don't block success flow for email errors
+          }
+          
+          setShowSuccessModal(true);
+          
+          toast.success('🎉 Booking confirmed! You will receive confirmation emails with your trip details and invoice.');
+        },
+        (error: any) => {
+          // Payment failed
+          console.error('Payment failed:', error);
+          setLoading(false);
+          toast.error('Payment failed. Please try again.');
+        }
+      );
+      
+    } catch (error) {
+      console.error('Booking failed:', error);
+      setLoading(false);
+      toast.error('Failed to initiate payment. Please try again.');
+    }
+  }, [selectedTour, bookingData, state.user, addOns]);
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -355,7 +485,7 @@ const TourModalContent = memo(() => {
                 <div className="flex justify-between items-center text-lg">
                   <span className="text-white font-semibold">Total Amount</span>
                   <span className="text-2xl font-bold text-purple-400">
-                    ₹{(parseInt(selectedTour.price.replace('₹', '').replace(',', '')) * bookingData.participants).toLocaleString()}
+                    ₹{(parsePrice(selectedTour.price) * bookingData.participants).toLocaleString()}
                   </span>
                 </div>
                 <p className="text-gray-400 text-sm mt-1">For {bookingData.participants} participant(s)</p>
@@ -364,14 +494,23 @@ const TourModalContent = memo(() => {
               {/* Book Button */}
               <Button
                 onClick={handleBooking}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 text-lg"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Book This Adventure Now
+                {loading ? 'Processing...' : 'Book This Adventure Now'}
               </Button>
             </div>
           )}
         </OptimizedGlass>
       </motion.div>
+
+      {/* Success Modal */}
+      <UniversalModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        type="success"
+        data={successBookingData}
+      />
     </div>
   );
 });

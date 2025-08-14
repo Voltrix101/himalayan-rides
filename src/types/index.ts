@@ -29,16 +29,50 @@ export interface Vehicle {
 export interface Booking {
   id: string;
   userId: string;
-  vehicleId: string;
-  vehicle: Vehicle;
+  vehicleId?: string;
+  vehicle?: Vehicle;
+  experienceId?: string;
+  experienceTitle?: string;
   startDate: Date;
   endDate: Date;
   pickupLocation: string;
-  dropLocation: string;
+  dropLocation?: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  participants: number;
   totalAmount: number;
-  status: 'confirmed' | 'active' | 'completed' | 'cancelled';
-  paymentId: string;
+  status: 'draft' | 'pending_payment' | 'confirmed' | 'active' | 'completed' | 'cancelled' | 'failed' | 'refunded';
+  paymentStatus?: 'pending' | 'captured' | 'failed' | 'refunded';
+  specialRequests?: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  razorpay?: {
+    orderId: string;
+    paymentId?: string;
+  };
+  invoiceUrl?: string;
+  tripDetailsUrl?: string;
   createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface Payment {
+  id: string;
+  bookingId: string;
+  orderId: string;
+  paymentId?: string;
+  amount: number;
+  currency: string;
+  status: 'created' | 'authorized' | 'captured' | 'refunded' | 'failed';
+  method?: string;
+  razorpaySignature?: string;
+  refundId?: string;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface Region {

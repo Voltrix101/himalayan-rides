@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "himalayan-rides-1e0ef"
-  }
+    "testing": "himalayan-rides-1e0ef"
+  },
+  "targets": {},
+  "etags": {}
 }

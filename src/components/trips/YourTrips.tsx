@@ -5,7 +5,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/authService';
 import { GlassCard } from '../ui/GlassCard';
 import { Button } from '../ui/Button';
-import { generateTripPDF } from '../../utils/pdfGenerator';
 import toast from 'react-hot-toast';
 
 interface TripBooking {
@@ -111,11 +110,26 @@ export function YourTrips() {
   const handleDownloadPDF = async (trip: TripBooking) => {
     setDownloadingPDF(trip.id);
     try {
-      await generateTripPDF(trip);
-      toast.success('PDF downloaded successfully!');
+      // Call backend service to generate and email PDF
+      const response = await fetch('/api/generateTripPDF', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookingId: trip.id,
+          email: trip.bookingDetails.primaryContact.email,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success('Trip details PDF has been sent to your email!');
+      } else {
+        throw new Error('Failed to generate PDF');
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF');
+      toast.error('Failed to generate PDF. Please try again.');
     } finally {
       setDownloadingPDF(null);
     }

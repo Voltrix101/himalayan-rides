@@ -1,0 +1,47 @@
+rules_version = '2';
+
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Images and documents can be uploaded by authenticated users
+    match /{allPaths=**} {
+      allow read: if true; // Public read access for all files
+      allow write: if request.auth != null; // Authenticated write access
+    }
+    
+    // Test files for testing purposes
+    match /test/{fileName} {
+      allow read, write: if true; // Full access for testing
+    }
+    
+    // Admin uploads
+    match /admin/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+                   request.auth.token.email in [
+                     'amritob0327.roy@gmail.com',
+                     'amritoballavroy@gmail.com'
+                   ];
+    }
+    
+    // User uploads (profile pictures, documents)
+    match /users/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Trip documents and images
+    match /trips/{tripId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Booking documents
+    match /bookings/{bookingId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+  }
+}

@@ -33,6 +33,8 @@ import {
   Experience,
   Booking 
 } from '../../services/adminFirebaseService';
+import { explorePlansService } from '../../services/explorePlansService';
+import { ExplorePlan } from '../../types';
 import { populateSampleData } from '../../utils/sampleDataPopulator';
 import toast from 'react-hot-toast';
 
@@ -76,6 +78,7 @@ export const EnhancedAdminDashboard = memo(() => {
   const [users, setUsers] = useState<User[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [explorePlans, setExplorePlans] = useState<ExplorePlan[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [bikeTours, setBikeTours] = useState<BikeTour[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -97,6 +100,8 @@ export const EnhancedAdminDashboard = memo(() => {
 
   // Initialize real-time listeners
   useEffect(() => {
+    let unsubscribeExplorePlans: (() => void) | null = null;
+    
     const initializeData = async () => {
       console.log('🚀 Initializing admin dashboard data...');
       setIsLoading(true);
@@ -114,6 +119,11 @@ export const EnhancedAdminDashboard = memo(() => {
         
         console.log('🏔️ Setting up destinations listener...');
         await adminFirebaseService.getDestinations(setDestinations);
+        
+        // Also set up ExplorePlans listener for real-time sync
+        unsubscribeExplorePlans = explorePlansService.subscribeToExplorePlans((plans: ExplorePlan[]) => {
+          setExplorePlans(plans);
+        });
         
         console.log('📸 Setting up experiences listener...');
         await adminFirebaseService.getExperiences(setExperiences);
@@ -139,6 +149,9 @@ export const EnhancedAdminDashboard = memo(() => {
     return () => {
       console.log('🧹 Cleaning up admin dashboard listeners');
       adminFirebaseService.cleanup();
+      if (unsubscribeExplorePlans) {
+        unsubscribeExplorePlans();
+      }
     };
   }, []);
 
