@@ -11,7 +11,7 @@ const corsHandler = cors({ origin: true });
 /**
  * Create Razorpay Order - Callable Function
  */
-export const createRazorpayOrder = (db: admin.firestore.Firestore) => functions.https.onCall(async (data, context) => {
+export const createRazorpayOrder = (db: admin.firestore.Firestore) => functions.https.onCall(async (data) => {
   try {
     const { bookingData, userId } = data;
     
@@ -469,7 +469,7 @@ async function handleRefundProcessed(db: admin.firestore.Firestore, event: any) 
 /**
  * Process Refund - Callable Function (Admin Only)
  */
-export const refundPayment = (db: admin.firestore.Firestore) => functions.https.onCall(async (data, context) => {
+export const refundPayment = () => functions.https.onCall(async (data, context) => {
   try {
     // Validate authentication and admin access
     if (!context.auth) {
@@ -543,7 +543,7 @@ export const refundPayment = (db: admin.firestore.Firestore) => functions.https.
  * Send Booking Confirmation Email - Callable Function
  * This is called immediately after successful payment for instant email delivery
  */
-export const sendBookingConfirmation = (db: admin.firestore.Firestore) => functions.https.onCall(async (data, context) => {
+export const sendBookingConfirmation = (db: admin.firestore.Firestore) => functions.https.onCall(async (data) => {
   try {
     const { paymentId, orderId } = data;
     

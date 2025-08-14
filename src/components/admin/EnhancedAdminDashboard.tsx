@@ -604,7 +604,7 @@ export const EnhancedAdminDashboard = memo(() => {
           </div>
         );
 
-      case 'experiences':
+      case 'experiences': {
         const filteredExperiences = experiences.filter(exp =>
           exp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           exp.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -706,6 +706,7 @@ export const EnhancedAdminDashboard = memo(() => {
             </OptimizedGlass>
           </div>
         );
+      }
 
       case 'biketours':
         return (

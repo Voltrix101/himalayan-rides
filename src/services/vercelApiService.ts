@@ -2,7 +2,7 @@
 // This replaces Firebase Cloud Functions with Vercel Serverless Functions
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-app.vercel.app/api' 
+  ? `${window.location.origin}/api`
   : '/api';
 
 /**

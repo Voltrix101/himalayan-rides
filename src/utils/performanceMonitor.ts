@@ -56,7 +56,7 @@ export class PerformanceMonitor {
       });
       observer.observe({ entryTypes: ['first-input'] });
       this.observers.set('fid', observer);
-    } catch (error) {
+    } catch {
       console.warn('FID observation not supported');
     }
   }

@@ -129,7 +129,7 @@ async function sendEmail(
     const subject = `Your Himalayan Rides Booking Confirmation - #${bookingData.id}`;
     
     const htmlContent = generateEmailHTML(bookingData, paymentData, invoiceUrl, tripDetailsUrl);
-    const textContent = generateEmailText(bookingData, paymentData);
+    const textContent = generateEmailText(bookingData);
 
     // Recipients
     const adminEmails = process.env.ADMIN_EMAILS || 'amritob0327.roy@gmail.com,amritoballavroy@gmail.com';
@@ -222,7 +222,7 @@ function generateEmailHTML(
 /**
  * Generate plain text email content
  */
-function generateEmailText(bookingData: any, paymentData: any): string {
+function generateEmailText(bookingData: any): string {
   return `
 Himalayan Rides - Booking Confirmation
 

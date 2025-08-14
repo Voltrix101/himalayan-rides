@@ -96,7 +96,7 @@ const FirebaseTestPage: React.FC = () => {
         await healthCheck();
         addLog(`✅ Vercel API health check successful`);
         updateTestResult('vercelApi', 'success');
-      } catch (apiError) {
+      } catch {
         addLog(`ℹ️ Vercel API not deployed yet - will work after deployment`);
         addLog(`📝 The API code is ready in /api directory`);
         updateTestResult('vercelApi', 'success'); // Mark as success since code is ready
@@ -162,7 +162,7 @@ const FirebaseTestPage: React.FC = () => {
     };
     
     runTests();
-  }, []); // Empty dependency array is intentional - only run on mount
+  }, [testAuth, testFirestore, testStorage, testVercelApi, testProductionBooking]); // Include test functions in dependencies
 
   const getStatusIcon = (status: string) => {
     switch (status) {
