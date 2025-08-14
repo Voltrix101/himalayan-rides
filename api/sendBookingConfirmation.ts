@@ -54,13 +54,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // In a real implementation, you would call the email function here
     // await sendBookingConfirmationEmail(bookingData, paymentData);
 
+    console.log(`Booking data:`, bookingData.experienceTitle);
+    console.log(`Payment data:`, paymentData.amount);
+
     return successResponse(res, {
       success: true,
       message: 'Booking confirmation sent successfully',
       bookingId,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error sending booking confirmation:', error);
     return errorResponse(res, 500, 'Failed to send booking confirmation', error);
   }

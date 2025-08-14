@@ -1,7 +1,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import * as nodemailer from 'nodemailer';
+import * as fs from 'fs';
 import { db, storage, enableCors, handleOptions, errorResponse, successResponse } from '../_lib/firebase';
 import { generateInvoicePDF, generateTripDetailsPDF } from '../_lib/pdf';
+import { BookingData, PaymentData } from '../_lib/types';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
@@ -71,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       tripDetailsUrl,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error sending confirmation email for booking:`, error);
     return errorResponse(res, 500, 'Failed to send confirmation email', error);
   }
@@ -86,7 +88,7 @@ async function uploadPDFAndGetURL(filePath: string, bookingId: string, type: str
     const fileName = `bookings/${bookingId}/${type}-${Date.now()}.pdf`;
     const file = bucket.file(fileName);
 
-    await file.save(require('fs').readFileSync(filePath));
+    await file.save(fs.readFileSync(filePath));
     
     // Make file publicly accessible
     await file.makePublic();
@@ -106,8 +108,8 @@ async function uploadPDFAndGetURL(filePath: string, bookingId: string, type: str
  * Send email using Nodemailer
  */
 async function sendEmail(
-  bookingData: any, 
-  paymentData: any, 
+  bookingData: BookingData, 
+  paymentData: PaymentData, 
   invoiceUrl: string, 
   tripDetailsUrl: string
 ): Promise<void> {

@@ -1,6 +1,8 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import * as crypto from 'crypto';
-import { db, enableCors, handleOptions, errorResponse, successResponse } from '../_lib/firebase';
+// Update the import path if your firebase utilities are located elsewhere, for example:
+import { db, enableCors, handleOptions, errorResponse, successResponse } from '../lib/firebase';
+// Or create the file '../_lib/firebase.ts' with the required exports if it does not exist.
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS

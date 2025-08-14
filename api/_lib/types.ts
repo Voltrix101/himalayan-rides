@@ -34,7 +34,7 @@ export interface PaymentData {
   currency: string;
   status: 'created' | 'captured' | 'failed' | 'refunded';
   paymentId?: string;
-  paymentDetails?: any;
+  paymentDetails?: Record<string, unknown>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,10 +60,10 @@ export interface WebhookEvent {
   event: string;
   payload: {
     payment: {
-      entity: any;
+      entity: Record<string, unknown>;
     };
     order: {
-      entity: any;
+      entity: Record<string, unknown>;
     };
   };
 }

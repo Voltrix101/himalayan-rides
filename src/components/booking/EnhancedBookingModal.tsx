@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Users, MapPin, CreditCard, Loader2 } from 'lucide-react';
 import { OptimizedGlass } from '../ui/OptimizedGlass';
@@ -53,6 +53,12 @@ export const EnhancedBookingModal: React.FC<EnhancedBookingModalProps> = ({
     },
   });
 
+  // Calculate total function - moved before useEffect
+  const calculateTotal = useCallback(() => {
+    const basePrice = experience?.price || 15000;
+    return basePrice * formData.participants;
+  }, [experience?.price, formData.participants]);
+
   // Listen to booking status changes
   useEffect(() => {
     if (!bookingId) return;
@@ -92,7 +98,17 @@ export const EnhancedBookingModal: React.FC<EnhancedBookingModalProps> = ({
     );
 
     return () => unsubscribe();
-  }, [bookingId, onSuccess, onClose]);
+  }, [
+    bookingId, 
+    onSuccess, 
+    onClose, 
+    experience?.title, 
+    formData.participants, 
+    formData.startDate, 
+    formData.email, 
+    formData.customerName,
+    calculateTotal
+  ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -112,11 +128,6 @@ export const EnhancedBookingModal: React.FC<EnhancedBookingModalProps> = ({
         [name]: name === 'participants' ? parseInt(value) || 1 : value,
       }));
     }
-  };
-
-  const calculateTotal = () => {
-    const basePrice = experience?.price || 15000;
-    return basePrice * formData.participants;
   };
 
   const handleBookNow = async () => {

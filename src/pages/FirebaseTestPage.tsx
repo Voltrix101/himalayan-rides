@@ -148,8 +148,22 @@ const FirebaseTestPage: React.FC = () => {
   };
 
   useEffect(() => {
-    runAllTests();
-  }, []); // Remove runAllTests dependency to avoid infinite re-renders
+    // Run tests on component mount
+    const runTests = async () => {
+      setLogs([]);
+      addLog('🚀 Starting Production Firebase + Vercel Integration Tests...');
+      
+      await testAuth();
+      await testFirestore();
+      await testStorage();
+      await testVercelApi();
+      await testProductionBooking();
+      
+      addLog('🎉 All tests completed!');
+    };
+    
+    runTests();
+  }, []); // Empty dependency array is intentional - only run on mount
 
   const getStatusIcon = (status: string) => {
     switch (status) {

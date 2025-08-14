@@ -1,5 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { enableCors, handleOptions, successResponse } from '../_lib/firebase';
+// Update the import path to the correct module or create the missing module if necessary
+import { enableCors, handleOptions, successResponse } from '../_lib/utils';
+// If '../_lib/utils' does not exist, create it and export the required functions.
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
