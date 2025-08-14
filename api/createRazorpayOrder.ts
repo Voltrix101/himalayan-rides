@@ -1,13 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import Razorpay from 'razorpay';
-// Update the import path if your firebase utilities are located elsewhere, for example:
-// Update the import path below to the correct location of your firebase utilities.
-// For example, if your firebase file is in 'lib/firebase.ts' at the project root:
-import { db, enableCors, handleOptions, errorResponse, successResponse } from '../lib/firebase';
-// If the file does not exist, create 'lib/firebase.ts' and export the required functions/objects.
-// Or, if the file is named differently or in a different folder, adjust accordingly:
-// import { db, enableCors, handleOptions, errorResponse, successResponse } from '../../lib/firebase';
-// Make sure the referenced file exists and exports the required functions/objects.
+import { db, enableCors, handleOptions, errorResponse, successResponse } from './_lib/firebase';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS

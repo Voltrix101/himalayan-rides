@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import Razorpay from 'razorpay';
-import { db, enableCors, handleOptions, errorResponse, successResponse } from '../_lib/firebase';
+import { db, enableCors, handleOptions, errorResponse, successResponse } from './_lib/firebase';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
@@ -39,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Calculate refund amount (default to full amount if not specified)
-    const refundAmountInPaise = refundAmount ? Math.round(refundAmount * 100) : payment.amount;
+    const refundAmountInPaise: number = refundAmount ? Math.round(refundAmount * 100) : Number(payment.amount);
 
     // Create refund
     const refund = await razorpay.payments.refund(paymentId, {

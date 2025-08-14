@@ -1,10 +1,8 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, 
-  Filter, 
   Eye, 
-  Edit, 
   Ban, 
   CheckCircle, 
   XCircle,
@@ -12,8 +10,7 @@ import {
   Mail,
   Phone,
   MapPin,
-  Download,
-  RefreshCw
+  Download
 } from 'lucide-react';
 import { OptimizedGlass } from '../ui/OptimizedGlass';
 import { Button } from '../ui/Button';
@@ -44,7 +41,7 @@ const UserDetailModal = memo(({ user, isOpen, onClose, userBookings }: UserDetai
           exit={{ opacity: 0, scale: 0.9 }}
           className="w-full max-w-4xl max-h-[90vh] overflow-hidden"
         >
-          <OptimizedGlass intensity="high" className="relative">
+          <OptimizedGlass intensity="heavy" className="relative">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-white/20">
               <h2 className="text-2xl font-bold text-white">User Details</h2>
@@ -71,7 +68,7 @@ const UserDetailModal = memo(({ user, isOpen, onClose, userBookings }: UserDetai
                         </div>
                         <div>
                           <div className="text-white font-medium">{user.name}</div>
-                          <div className="text-white/60 text-sm">Member since {new Date(user.createdAt).toLocaleDateString()}</div>
+                          <div className="text-white/60 text-sm">Member since {user.createdAt.toDate().toLocaleDateString()}</div>
                         </div>
                       </div>
                       
@@ -124,7 +121,7 @@ const UserDetailModal = memo(({ user, isOpen, onClose, userBookings }: UserDetai
                     <div className="flex items-center justify-between">
                       <span className="text-white/80">Last Login:</span>
                       <span className="text-white/60 text-sm">
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                        {user.lastLogin ? user.lastLogin.toDate().toLocaleDateString() : 'Never'}
                       </span>
                     </div>
                   </div>
@@ -172,7 +169,7 @@ const UserDetailModal = memo(({ user, isOpen, onClose, userBookings }: UserDetai
                         <div className="flex items-center justify-between mb-2">
                           <div>
                             <div className="text-white font-medium">{booking.itemName}</div>
-                            <div className="text-white/60 text-sm">{booking.itemType}</div>
+                            <div className="text-white/60 text-sm">{booking.itemName}</div>
                           </div>
                           <div className="text-right">
                             <div className="text-green-400 font-medium">₹{booking.totalAmount.toLocaleString()}</div>
@@ -190,11 +187,11 @@ const UserDetailModal = memo(({ user, isOpen, onClose, userBookings }: UserDetai
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-white/70">
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            <span>Start: {new Date(booking.startDate).toLocaleDateString()}</span>
+                            <span>Start: {booking.startDate.toDate().toLocaleDateString()}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
-                            <span>End: {new Date(booking.endDate).toLocaleDateString()}</span>
+                            <span>End: {booking.endDate.toDate().toLocaleDateString()}</span>
                           </div>
                           <div>
                             <span>Guests: {booking.guests}</span>
@@ -233,7 +230,6 @@ export const UserManagement = memo(({ users, onUpdateUser }: UserManagementProps
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [userBookings, setUserBookings] = useState<Booking[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'email' | 'createdAt' | 'totalBookings' | 'lastLogin'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -281,7 +277,6 @@ export const UserManagement = memo(({ users, onUpdateUser }: UserManagementProps
   // Handle view user details
   const handleViewUser = async (user: User) => {
     setSelectedUser(user);
-    setIsLoading(true);
     
     try {
       // Fetch user's bookings
@@ -291,7 +286,6 @@ export const UserManagement = memo(({ users, onUpdateUser }: UserManagementProps
       console.error('Error fetching user bookings:', error);
       setUserBookings([]);
     } finally {
-      setIsLoading(false);
       setUserModalOpen(true);
     }
   };
@@ -454,7 +448,7 @@ export const UserManagement = memo(({ users, onUpdateUser }: UserManagementProps
                       <div>
                         <div className="text-white font-medium">{user.name}</div>
                         <div className="text-white/60 text-sm">
-                          Member since {new Date(user.createdAt).toLocaleDateString()}
+                          Member since {user.createdAt.toDate().toLocaleDateString()}
                         </div>
                       </div>
                     </div>
@@ -488,7 +482,7 @@ export const UserManagement = memo(({ users, onUpdateUser }: UserManagementProps
                   <td className="py-3 px-4">
                     <div className="text-white/60 text-sm">
                       {user.lastLogin 
-                        ? new Date(user.lastLogin).toLocaleDateString()
+                        ? user.lastLogin.toDate().toLocaleDateString()
                         : 'Never'
                       }
                     </div>

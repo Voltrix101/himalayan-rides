@@ -1,9 +1,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import * as nodemailer from 'nodemailer';
 import * as fs from 'fs';
-import { db, storage, enableCors, handleOptions, errorResponse, successResponse } from '../_lib/firebase';
-import { generateInvoicePDF, generateTripDetailsPDF } from '../_lib/pdf';
-import { BookingData, PaymentData } from '../_lib/types';
+import { db, storage, enableCors, handleOptions, errorResponse, successResponse } from './_lib/firebase';
+import { generateInvoicePDF, generateTripDetailsPDF } from './_lib/pdf';
+import { BookingData, PaymentData } from './_lib/types';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
@@ -30,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return errorResponse(res, 404, 'Booking not found');
     }
 
-    const bookingData = { id: bookingId, ...bookingDoc.data() };
+    const bookingData = { id: bookingId, ...bookingDoc.data() } as BookingData;
 
     // Get payment data
     const paymentQuery = await db
@@ -43,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return errorResponse(res, 404, 'Payment not found');
     }
 
-    const paymentData = paymentQuery.docs[0].data();
+    const paymentData = paymentQuery.docs[0].data() as PaymentData;
 
     // Generate PDFs
     const invoicePath = await generateInvoicePDF(bookingData, paymentData);

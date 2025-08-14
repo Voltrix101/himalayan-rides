@@ -5,13 +5,6 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://your-app.vercel.app/api' 
   : '/api';
 
-interface ApiResponse<T = any> {
-  success?: boolean;
-  error?: string;
-  message?: string;
-  data?: T;
-}
-
 /**
  * Generic API call function with error handling
  */

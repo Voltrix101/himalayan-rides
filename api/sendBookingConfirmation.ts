@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { db, enableCors, handleOptions, errorResponse, successResponse } from '../_lib/firebase';
+import { db, enableCors, handleOptions, errorResponse, successResponse } from './_lib/firebase';
+import { BookingData } from './_lib/types';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle CORS
@@ -26,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return errorResponse(res, 404, 'Booking not found');
     }
 
-    const bookingData = { id: bookingId, ...bookingDoc.data() };
+    const bookingData = { id: bookingId, ...bookingDoc.data() } as BookingData;
 
     // Get payment data
     const paymentQuery = await db

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { db, auth } from '../config/firebase';
+import { db } from '../config/firebase';
 import { collection, addDoc, getDocs, query, orderBy, limit } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 const FirebaseTestPage: React.FC = () => {
   const { state } = useApp();

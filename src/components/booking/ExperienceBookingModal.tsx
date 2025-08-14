@@ -47,8 +47,6 @@ export function ExperienceBookingModal({ experience, isOpen, onClose }: Experien
   const [successBookingData, setSuccessBookingData] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const totalSteps = 5;
-
   // Handle participant count changes and manage additional participants
   const handleParticipantChange = (newCount: number) => {
     const additionalNeeded = Math.max(0, newCount - 1); // Subtract 1 for the main booker

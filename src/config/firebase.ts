@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
@@ -32,7 +32,7 @@ export const storage = getStorage(app);
 export const functions = getFunctions(app);
 
 // Connect to emulators in development - TEMPORARILY DISABLED FOR PRODUCTION TESTING
-if (false && import.meta.env.MODE === 'development') {
+if (false && typeof window !== 'undefined' && window.location.hostname === 'localhost') {
   try {
     // Connect to Functions emulator
     connectFunctionsEmulator(functions, 'localhost', 5001);
