@@ -43,7 +43,7 @@ Add these environment variables (set for "Production" environment):
 - MAIL_HOST: smtp.gmail.com
 - MAIL_PORT: 587
 - MAIL_USER: amritob0327.roy@gmail.com
-- MAIL_PASS: [Your Gmail App Password - Get from Google Account Security]
+- MAIL_PASS: zufn hqyk rapm mvmf
 - ADMIN_EMAILS: amritob0327.roy@gmail.com,amritoballavroy@gmail.com
 
 ## 📋 Deployment Checklist
