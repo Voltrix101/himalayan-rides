@@ -242,23 +242,26 @@ export const UserManagement = memo(({ users, onUpdateUser }: UserManagementProps
       return matchesSearch && matchesStatus;
     })
     .sort((a, b) => {
-      let aValue: any = a[sortBy];
-      let bValue: any = b[sortBy];
+      const aValue: unknown = a[sortBy];
+      const bValue: unknown = b[sortBy];
       
       if (sortBy === 'createdAt' || sortBy === 'lastLogin') {
-        aValue = new Date(aValue || 0).getTime();
-        bValue = new Date(bValue || 0).getTime();
+        const aTime = new Date(aValue as string || 0).getTime();
+        const bTime = new Date(bValue as string || 0).getTime();
+        return sortOrder === 'asc' ? aTime - bTime : bTime - aTime;
       }
       
+      let aStr = aValue;
+      let bStr = bValue;
       if (typeof aValue === 'string') {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
+        aStr = aValue.toLowerCase();
+        bStr = (bValue as string).toLowerCase();
       }
       
       if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
+        return aStr > bStr ? 1 : -1;
       } else {
-        return aValue < bValue ? 1 : -1;
+        return aStr < bStr ? 1 : -1;
       }
     });
 
@@ -367,7 +370,7 @@ export const UserManagement = memo(({ users, onUpdateUser }: UserManagementProps
           <div className="flex gap-3">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive' | 'suspended')}
               className="px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
             >
               <option value="all">All Status</option>
@@ -378,7 +381,7 @@ export const UserManagement = memo(({ users, onUpdateUser }: UserManagementProps
             
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'name' | 'email' | 'createdAt' | 'totalBookings' | 'lastLogin')}
               className="px-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white"
             >
               <option value="createdAt">Sort by Join Date</option>
@@ -470,7 +473,7 @@ export const UserManagement = memo(({ users, onUpdateUser }: UserManagementProps
                       {getStatusIcon(user.status)}
                       <select
                         value={user.status}
-                        onChange={(e) => handleStatusUpdate(user.id, e.target.value as any)}
+                        onChange={(e) => handleStatusUpdate(user.id, e.target.value as 'active' | 'inactive' | 'suspended')}
                         className="bg-white/10 border border-white/20 text-white text-sm rounded px-2 py-1"
                       >
                         <option value="active">Active</option>

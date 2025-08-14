@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useScroll, useTransform, MotionValue } from 'framer-motion';
+import { useScroll, useTransform } from 'framer-motion';
 import { PerformanceMonitor } from '../utils/performanceMonitor';
 
 interface ScrollConfig {
@@ -47,11 +47,17 @@ export const useOptimizedScroll = (config: ScrollConfig = {}) => {
     return value;
   }, [throttle]);
   
-  // Optimized transforms with reduced calculations
-  const opacity = enableOpacity ? useTransform(scrollY, [0, 300], [0.8, 0.95]) : undefined;
-  const blur = enableBlur ? useTransform(scrollY, [0, 300], [8, 24]) : undefined;
-  const parallaxY = enableParallax ? useTransform(scrollY, [0, 1000], [0, -100]) : undefined;
-  const scale = enableParallax ? useTransform(scrollY, [0, 500], [1, 1.05]) : undefined;
+  // Always call hooks but use different transforms based on options
+  const opacityTransform = useTransform(scrollY, [0, 300], [0.8, 0.95]);
+  const blurTransform = useTransform(scrollY, [0, 300], [8, 24]);
+  const parallaxYTransform = useTransform(scrollY, [0, 1000], [0, -100]);
+  const scaleTransform = useTransform(scrollY, [0, 500], [1, 1.05]);
+  
+  // Return the transforms conditionally
+  const opacity = enableOpacity ? opacityTransform : undefined;
+  const blur = enableBlur ? blurTransform : undefined;
+  const parallaxY = enableParallax ? parallaxYTransform : undefined;
+  const scale = enableParallax ? scaleTransform : undefined;
   
   // Throttled scroll Y
   const throttledScrollY = useTransform(scrollY, throttledCallback);
