@@ -149,7 +149,7 @@ const FirebaseTestPage: React.FC = () => {
 
   useEffect(() => {
     runAllTests();
-  }, []);
+  }, []); // Remove runAllTests dependency to avoid infinite re-renders
 
   const getStatusIcon = (status: string) => {
     switch (status) {

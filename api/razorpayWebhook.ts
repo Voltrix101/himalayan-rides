@@ -1,5 +1,4 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import Razorpay from 'razorpay';
 import * as crypto from 'crypto';
 import { db, enableCors, handleOptions, errorResponse, successResponse } from '../_lib/firebase';
 
@@ -82,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log(`Unhandled webhook event: ${event.event}`);
     return successResponse(res, { status: 'ignored' });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error processing webhook:', error);
     return errorResponse(res, 500, 'Webhook processing failed', error);
   }

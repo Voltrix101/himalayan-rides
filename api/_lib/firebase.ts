@@ -38,17 +38,17 @@ export function handleOptions(req: VercelRequest, res: VercelResponse) {
 /**
  * Error response helper
  */
-export function errorResponse(res: VercelResponse, statusCode: number, message: string, error?: any) {
+export function errorResponse(res: VercelResponse, statusCode: number, message: string, error?: unknown) {
   console.error('API Error:', message, error);
   res.status(statusCode).json({
     error: message,
-    details: error?.message || error
+    details: error instanceof Error ? error.message : error
   });
 }
 
 /**
  * Success response helper
  */
-export function successResponse(res: VercelResponse, data: any, statusCode: number = 200) {
+export function successResponse(res: VercelResponse, data: unknown, statusCode: number = 200) {
   res.status(statusCode).json(data);
 }

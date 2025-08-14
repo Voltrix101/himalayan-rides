@@ -2,11 +2,12 @@ import PDFDocument from 'pdfkit';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { BookingData, PaymentData } from './types';
 
 /**
  * Generate invoice PDF
  */
-export async function generateInvoicePDF(bookingData: any, paymentData: any): Promise<string> {
+export async function generateInvoicePDF(bookingData: BookingData, paymentData: PaymentData): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
       // Create temporary file path
@@ -74,7 +75,7 @@ export async function generateInvoicePDF(bookingData: any, paymentData: any): Pr
 /**
  * Generate trip details PDF
  */
-export async function generateTripDetailsPDF(bookingData: any): Promise<string> {
+export async function generateTripDetailsPDF(bookingData: BookingData): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
       // Create temporary file path

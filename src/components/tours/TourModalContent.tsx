@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from 'react';
+import { memo, useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Clock, Mountain, Route, Star, Camera } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
@@ -105,12 +105,12 @@ const TourModalContent = memo<TourModalContentProps>(({ preSelectedTour, autoOpe
     return parseInt(price.replace('₹', '').replace(',', ''));
   };
 
-  const addOns = [
+  const addOns = useMemo(() => [
     { id: 'photography', name: 'Professional Photography', price: '₹15,000' },
     { id: 'camping', name: 'Premium Camping Gear', price: '₹8,000' },
     { id: 'meals', name: 'Gourmet Meal Package', price: '₹12,000' },
     { id: 'insurance', name: 'Travel Insurance', price: '₹5,000' }
-  ];
+  ], []);
 
   const handleBooking = useCallback(async () => {
     try {

@@ -92,7 +92,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: 'Refund processed successfully',
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error processing refund:', error);
     return errorResponse(res, 500, 'Failed to process refund', error);
   }

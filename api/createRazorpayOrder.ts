@@ -1,6 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import Razorpay from 'razorpay';
-import * as crypto from 'crypto';
 import { db, enableCors, handleOptions, errorResponse, successResponse } from '../_lib/firebase';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -108,7 +107,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       description: `Booking for ${bookingData.experienceTitle}`,
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating Razorpay order:', error);
     return errorResponse(res, 500, 'Failed to create order', error);
   }
