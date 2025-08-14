@@ -78,7 +78,7 @@ function AppContent() {
   const [nonAuthModalState, setNonAuthModalState] = useState<{
     isOpen: boolean;
     type: Exclude<ModalType, 'auth'>;
-    data: any;
+    data: Record<string, unknown>;
   }>({
     isOpen: false,
     type: 'booking',
@@ -86,7 +86,7 @@ function AppContent() {
   });
 
   // Non-auth modal handlers
-  const openModal = useCallback((type: ModalType, data: any = {}) => {
+  const openModal = useCallback((type: ModalType, data: Record<string, unknown> = {}) => {
     console.log('🚪 Opening modal:', type, data);
     if (type === 'auth') {
       // For auth modals, use the useAuth state

@@ -4,7 +4,7 @@ import * as crypto from 'crypto';
 import Razorpay from 'razorpay';
 // import { sendBookingConfirmationEmail } from './email'; // Temporarily disabled
 import cors from 'cors';
-import { RazorpayWebhookPayload, RazorpayPaymentResponse, BookingData, PaymentData, RefundData } from './types';
+import { RazorpayWebhookPayload, RefundData } from './types';
 
 // Configure CORS
 const corsHandler = cors({ origin: true });

@@ -181,7 +181,7 @@ export function DestinationForm({ isOpen, onClose, destination, mode }: Destinat
                 <label className="block text-white/90 mb-2">Difficulty</label>
                 <select
                   value={formData.difficulty}
-                  onChange={(e) => setFormData(prev => ({ ...prev, difficulty: e.target.value as any }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, difficulty: e.target.value as 'Easy' | 'Moderate' | 'Challenging' }))}
                   className="w-full p-3 rounded-lg bg-white/10 border border-white/20 text-white"
                 >
                   <option value="Easy">Easy</option>
