@@ -26,20 +26,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return errorResponse(res, 404, 'Booking not found');
     }
 
-    const bookingData = { id: bookingId, ...bookingDoc.data() };
-
     // Get payment data
     const paymentQuery = await db
       .collection('payments')
       .where('bookingId', '==', bookingId)
       .limit(1)
       .get();
-    
+
     if (paymentQuery.empty) {
       return errorResponse(res, 404, 'Payment not found');
     }
-
-    const paymentData = paymentQuery.docs[0].data();
 
     // Update booking status
     await db.collection('bookings').doc(bookingId).update({

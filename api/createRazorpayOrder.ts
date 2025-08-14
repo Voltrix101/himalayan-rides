@@ -1,6 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import Razorpay from 'razorpay';
-import * as crypto from 'crypto';
 import { db, enableCors, handleOptions, errorResponse, successResponse } from '../_lib/firebase';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
