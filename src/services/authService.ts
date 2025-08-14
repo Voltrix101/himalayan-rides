@@ -121,12 +121,13 @@ class AuthService {
       } else {
         throw new Error('User data not found in database');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
       // If user doesn't exist, create a new account
-      if (error.code === 'auth/user-not-found' || 
-          error.code === 'auth/wrong-password' ||
-          error.code === 'auth/invalid-credential' ||
-          error.code === AuthErrorCodes.INVALID_EMAIL) {
+      if (authError.code === 'auth/user-not-found' || 
+          authError.code === 'auth/wrong-password' ||
+          authError.code === 'auth/invalid-credential' ||
+          authError.code === AuthErrorCodes.INVALID_EMAIL) {
         
         if (!userData) {
           throw new Error('User data required for account creation');
@@ -179,7 +180,7 @@ class AuthService {
         ...user,
         isAuthenticated: true
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating account:', error);
       
       let errorMessage = 'Failed to create account';
@@ -250,13 +251,14 @@ class AuthService {
         isAuthenticated: true,
         lastLoginAt: new Date(),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
       // Ignore popup-closed errors gracefully
-      if (error?.code === 'auth/popup-closed-by-user') {
+      if (authError?.code === 'auth/popup-closed-by-user') {
         throw new Error('Sign-in popup closed');
       }
       console.error('Google sign-in error:', error);
-      throw new Error(error?.message || 'Failed to sign in with Google');
+      throw new Error(authError?.message || 'Failed to sign in with Google');
     }
   }
 
@@ -400,11 +402,12 @@ class AuthService {
         handleCodeInApp: false // Handle reset in email, not in app
       });
       toast.success('Password reset email sent! Check your inbox.');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
       console.error('Error sending password reset email:', error);
       
       let errorMessage = 'Failed to send password reset email';
-      if (error.code === 'auth/user-not-found') {
+      if (authError.code === 'auth/user-not-found') {
         errorMessage = 'No account found with this email address';
       } else if (error.code === AuthErrorCodes.INVALID_EMAIL) {
         errorMessage = 'Invalid email address';
@@ -421,7 +424,7 @@ class AuthService {
     try {
       const email = await verifyPasswordResetCode(auth, code);
       return email;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error verifying password reset code:', error);
       
       let errorMessage = 'Invalid or expired reset code';
@@ -440,15 +443,16 @@ class AuthService {
     try {
       await confirmPasswordReset(auth, code, newPassword);
       toast.success('Password reset successfully! You can now sign in with your new password.');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const authError = error as { code?: string; message?: string };
       console.error('Error confirming password reset:', error);
       
       let errorMessage = 'Failed to reset password';
-      if (error.code === 'auth/invalid-action-code') {
+      if (authError.code === 'auth/invalid-action-code') {
         errorMessage = 'Invalid reset code';
-      } else if (error.code === 'auth/expired-action-code') {
+      } else if (authError.code === 'auth/expired-action-code') {
         errorMessage = 'Reset code has expired';
-      } else if (error.code === 'auth/weak-password') {
+      } else if (authError.code === 'auth/weak-password') {
         errorMessage = 'Password should be at least 6 characters';
       }
       

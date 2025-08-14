@@ -4,7 +4,7 @@ import { httpsCallable } from 'firebase/functions';
 
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: typeof import('razorpay');
   }
 }
 
@@ -118,13 +118,13 @@ class RazorpayService {
     orderData: RazorpayOrderResponse,
     bookingData: BookingData,
     onSuccess: (response: RazorpayPaymentData) => void,
-    onFailure: (error: any) => void
+    onFailure: (error: Error) => void
   ): Promise<void> {
     try {
       await this.loadRazorpayScript();
 
       const options = {
-        key: (import.meta as any).env?.VITE_RAZORPAY_KEY_ID || orderData.key,
+        key: import.meta.env?.VITE_RAZORPAY_KEY_ID || orderData.key,
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'Himalayan Rides',
@@ -161,7 +161,7 @@ class RazorpayService {
   /**
    * Process refund (Admin only)
    */
-  async processRefund(paymentId: string, amount?: number, reason?: string): Promise<any> {
+  async processRefund(paymentId: string, amount?: number, reason?: string): Promise<Record<string, unknown>> {
     try {
       const refundFunction = httpsCallable(this.functions, 'refundPayment');
       const result = await refundFunction({ paymentId, amount, reason });
