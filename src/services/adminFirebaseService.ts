@@ -10,8 +10,7 @@ import {
   orderBy, 
   where, 
   Timestamp,
-  writeBatch,
-  getDoc
+  writeBatch
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import toast from 'react-hot-toast';
@@ -146,6 +145,19 @@ export interface Booking {
   specialRequests?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+export interface DashboardStats {
+  totalUsers: number;
+  totalVehicles: number;
+  totalBookings: number;
+  totalDestinations: number;
+  totalBikeTours: number;
+  totalExperiences: number;
+  activeBookings: number;
+  pendingBookings: number;
+  recentBookings?: Booking[];
+  totalRevenue?: number;
 }
 
 class AdminFirebaseService {
@@ -551,7 +563,7 @@ class AdminFirebaseService {
   // DASHBOARD STATS
   // =============================================================================
 
-  async getDashboardStats(callback: (stats: any) => void) {
+  async getDashboardStats(callback: (stats: DashboardStats) => void) {
     try {
       console.log('📊 Setting up dashboard stats listeners...');
       // Get real-time counts from all collections
@@ -629,7 +641,7 @@ class AdminFirebaseService {
   // =============================================================================
 
   // Bulk operations
-  async bulkUpdateStatus(collection: string, ids: string[], status: any) {
+  async bulkUpdateStatus(collection: string, ids: string[], status: string) {
     try {
       const batch = writeBatch(db);
       
@@ -660,7 +672,7 @@ class AdminFirebaseService {
   async exportData(collectionName: string) {
     try {
       const snapshot = await getDocs(collection(db, collectionName));
-      const data: any[] = [];
+      const data: Record<string, unknown>[] = [];
       
       snapshot.forEach((doc) => {
         data.push({ id: doc.id, ...doc.data() });

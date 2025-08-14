@@ -2,13 +2,14 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as nodemailer from 'nodemailer';
 import { generateInvoicePDF, generateTripDetailsPDF, uploadPDFAndGetURL } from './pdf';
+import { BookingData, PaymentData } from './types';
 
 const db = admin.firestore();
 
 /**
  * Send booking confirmation email with PDFs
  */
-export async function sendBookingConfirmationEmail(bookingData: any, paymentData: any): Promise<void> {
+export async function sendBookingConfirmationEmail(bookingData: BookingData, paymentData: PaymentData): Promise<void> {
   try {
     functions.logger.info(`Generating PDFs for booking: ${bookingData.id}`);
 
@@ -278,7 +279,7 @@ function generateEmailHTML(
 /**
  * Generate plain text email content
  */
-function generateEmailText(bookingData: any, paymentData: any): string {
+function generateEmailText(bookingData: BookingData, _paymentData: PaymentData): string {
   return `
 HIMALAYAN RIDES - Booking Confirmation
 

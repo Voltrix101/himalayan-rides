@@ -2,6 +2,7 @@
  * Admin utility functions for role-based access control
  */
 import { ALLOWED_ADMIN_EMAILS, isAdminEmail } from '../constants/admin';
+import { User } from '../types';
 
 /**
  * Check if a user email is an admin
@@ -18,7 +19,7 @@ export const isAdminUser = (email: string | null | undefined): boolean => {
  * @param user - User object with email property
  * @returns boolean indicating if user is admin
  */
-export const isCurrentUserAdmin = (user: any): boolean => {
+export const isCurrentUserAdmin = (user: User | { email: string }): boolean => {
   // Check temporary admin access for testing
   if (sessionStorage.getItem('tempAdminAccess') === 'true') {
     return true;

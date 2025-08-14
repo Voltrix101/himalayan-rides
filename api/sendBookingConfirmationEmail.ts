@@ -157,8 +157,8 @@ async function sendEmail(
  * Generate HTML email content
  */
 function generateEmailHTML(
-  bookingData: any, 
-  paymentData: any, 
+  bookingData: BookingData, 
+  paymentData: PaymentData, 
   invoiceUrl: string, 
   tripDetailsUrl: string
 ): string {
@@ -222,7 +222,7 @@ function generateEmailHTML(
 /**
  * Generate plain text email content
  */
-function generateEmailText(bookingData: any, paymentData: any): string {
+function generateEmailText(bookingData: BookingData, _paymentData: PaymentData): string {
   return `
 Himalayan Rides - Booking Confirmation
 

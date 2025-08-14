@@ -4,6 +4,7 @@ import * as crypto from 'crypto';
 import Razorpay from 'razorpay';
 // import { sendBookingConfirmationEmail } from './email'; // Temporarily disabled
 import cors from 'cors';
+import { RazorpayWebhookPayload, RefundData } from './types';
 
 // Configure CORS
 const corsHandler = cors({ origin: true });
@@ -11,7 +12,7 @@ const corsHandler = cors({ origin: true });
 /**
  * Create Razorpay Order - Callable Function
  */
-export const createRazorpayOrder = (db: admin.firestore.Firestore) => functions.https.onCall(async (data, context) => {
+export const createRazorpayOrder = (db: admin.firestore.Firestore) => functions.https.onCall(async (data, _context) => {
   try {
     const { bookingData, userId } = data;
     
@@ -329,7 +330,7 @@ export const razorpayWebhook = (db: admin.firestore.Firestore) => functions.http
 /**
  * Handle successful payment
  */
-async function handlePaymentSuccess(db: admin.firestore.Firestore, event: any) {
+async function handlePaymentSuccess(db: admin.firestore.Firestore, event: RazorpayWebhookPayload) {
   const payment = event.payload.payment.entity;
   const orderId = payment.order_id;
   const paymentId = payment.id;
@@ -390,7 +391,7 @@ async function handlePaymentSuccess(db: admin.firestore.Firestore, event: any) {
 /**
  * Handle failed payment
  */
-async function handlePaymentFailed(db: admin.firestore.Firestore, event: any) {
+async function handlePaymentFailed(db: admin.firestore.Firestore, event: RazorpayWebhookPayload) {
   const payment = event.payload.payment.entity;
   const orderId = payment.order_id;
 
@@ -429,7 +430,7 @@ async function handlePaymentFailed(db: admin.firestore.Firestore, event: any) {
 /**
  * Handle processed refund
  */
-async function handleRefundProcessed(db: admin.firestore.Firestore, event: any) {
+async function handleRefundProcessed(db: admin.firestore.Firestore, event: RazorpayWebhookPayload) {
   const refund = event.payload.refund.entity;
   const paymentId = refund.payment_id;
 
@@ -511,7 +512,7 @@ export const refundPayment = (db: admin.firestore.Firestore) => functions.https.
     }
 
     // Create refund via Razorpay
-    const refundData: any = {
+    const refundData: RefundData = {
       payment_id: paymentId,
     };
 
@@ -543,7 +544,7 @@ export const refundPayment = (db: admin.firestore.Firestore) => functions.https.
  * Send Booking Confirmation Email - Callable Function
  * This is called immediately after successful payment for instant email delivery
  */
-export const sendBookingConfirmation = (db: admin.firestore.Firestore) => functions.https.onCall(async (data, context) => {
+export const sendBookingConfirmation = (db: admin.firestore.Firestore) => functions.https.onCall(async (data, _context) => {
   try {
     const { paymentId, orderId } = data;
     

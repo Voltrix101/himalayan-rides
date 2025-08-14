@@ -80,11 +80,17 @@ export function ExperienceForm({ isOpen, onClose, experience, mode }: Experience
 
   const addToList = (key: 'highlights' | 'inclusions' | 'exclusions', value: string) => {
     if (!value.trim()) return;
-    setFormData(prev => ({ ...prev, [key]: [...(prev as any)[key], value.trim()] }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [key]: [...(prev[key as keyof typeof prev] as string[]), value.trim()] 
+    }));
   };
 
   const removeFromList = (key: 'highlights' | 'inclusions' | 'exclusions', value: string) => {
-    setFormData(prev => ({ ...prev, [key]: (prev as any)[key].filter((v: string) => v !== value) }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [key]: (prev[key as keyof typeof prev] as string[]).filter((v: string) => v !== value) 
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

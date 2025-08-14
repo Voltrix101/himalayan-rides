@@ -96,7 +96,7 @@ const FirebaseTestPage: React.FC = () => {
         await healthCheck();
         addLog(`✅ Vercel API health check successful`);
         updateTestResult('vercelApi', 'success');
-      } catch (apiError) {
+      } catch (_apiError) {
         addLog(`ℹ️ Vercel API not deployed yet - will work after deployment`);
         addLog(`📝 The API code is ready in /api directory`);
         updateTestResult('vercelApi', 'success'); // Mark as success since code is ready
@@ -163,6 +163,7 @@ const FirebaseTestPage: React.FC = () => {
     
     runTests();
   }, []); // Empty dependency array is intentional - only run on mount
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 
   const getStatusIcon = (status: string) => {
     switch (status) {

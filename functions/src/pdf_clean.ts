@@ -2,6 +2,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import PDFDocument from 'pdfkit';
 import * as fs from 'fs';
+import { BookingData, PaymentData } from './types';
 
 const storage = admin.storage();
 const bucket = storage.bucket();
@@ -18,7 +19,7 @@ const COLORS = {
 /**
  * Generate Invoice PDF
  */
-export async function generateInvoicePDF(bookingData: any, paymentData: any): Promise<string> {
+export async function generateInvoicePDF(bookingData: BookingData, paymentData: PaymentData): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ 
@@ -69,7 +70,7 @@ export async function generateInvoicePDF(bookingData: any, paymentData: any): Pr
 /**
  * Generate Trip Details PDF
  */
-export async function generateTripDetailsPDF(bookingData: any): Promise<string> {
+export async function generateTripDetailsPDF(bookingData: BookingData): Promise<string> {
   return new Promise((resolve, reject) => {
     try {
       const doc = new PDFDocument({ 
@@ -196,7 +197,7 @@ function drawHeader(doc: PDFKit.PDFDocument, title: string) {
 /**
  * Draw booking information section
  */
-function drawBookingInfo(doc: PDFKit.PDFDocument, bookingData: any) {
+function drawBookingInfo(doc: PDFKit.PDFDocument, bookingData: BookingData) {
   const startY = doc.y;
   
   // Booking info column
@@ -229,7 +230,7 @@ function drawBookingInfo(doc: PDFKit.PDFDocument, bookingData: any) {
 /**
  * Draw payment table
  */
-function drawPaymentTable(doc: PDFKit.PDFDocument, bookingData: any, paymentData: any) {
+function drawPaymentTable(doc: PDFKit.PDFDocument, bookingData: BookingData, paymentData: PaymentData) {
   const tableTop = doc.y;
   const tableWidth = doc.page.width - 100;
   
@@ -278,7 +279,7 @@ function drawPaymentTable(doc: PDFKit.PDFDocument, bookingData: any, paymentData
 /**
  * Draw trip details section
  */
-function drawTripDetails(doc: PDFKit.PDFDocument, bookingData: any) {
+function drawTripDetails(doc: PDFKit.PDFDocument, bookingData: BookingData) {
   const startY = doc.y;
   
   // Trip overview
@@ -314,7 +315,7 @@ function drawTripDetails(doc: PDFKit.PDFDocument, bookingData: any) {
 /**
  * Draw emergency information
  */
-function drawEmergencyInfo(doc: PDFKit.PDFDocument, bookingData: any) {
+function drawEmergencyInfo(doc: PDFKit.PDFDocument, bookingData: BookingData) {
   const startY = doc.y;
   
   // Emergency contacts

@@ -49,14 +49,14 @@ export class PerformanceMonitor {
     try {
       const observer = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
-          const fidEntry = entry as any; // PerformanceEventTiming
+          const fidEntry = entry as PerformanceEventTiming; // PerformanceEventTiming
           const fid = fidEntry.processingStart ? fidEntry.processingStart - entry.startTime : 0;
           console.log(`📊 FID: ${fid.toFixed(2)}ms`);
         }
       });
       observer.observe({ entryTypes: ['first-input'] });
       this.observers.set('fid', observer);
-    } catch (error) {
+    } catch (_error) {
       console.warn('FID observation not supported');
     }
   }

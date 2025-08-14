@@ -1,6 +1,23 @@
 // Vercel API Service
 // This replaces Firebase Cloud Functions with Vercel Serverless Functions
 
+import { Booking } from '../types';
+
+// Razorpay interfaces
+interface RazorpayOrderData {
+  id: string;
+  amount: number;
+  currency: string;
+  receipt?: string;
+  [key: string]: unknown;
+}
+
+interface RazorpayPaymentResponse {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+}
+
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-app.vercel.app/api' 
   : '/api';
@@ -8,7 +25,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
 /**
  * Generic API call function with error handling
  */
-async function apiCall<T = any>(
+async function apiCall<T = Record<string, unknown>>(
   endpoint: string, 
   options: RequestInit = {}
 ): Promise<T> {
@@ -38,7 +55,7 @@ async function apiCall<T = any>(
  * Create Razorpay Order
  * Replaces: httpsCallable(functions, 'createRazorpayOrder')
  */
-export async function createRazorpayOrder(bookingData: any, userId: string) {
+export async function createRazorpayOrder(bookingData: Partial<Booking>, userId: string) {
   return apiCall('/createRazorpayOrder', {
     method: 'POST',
     body: JSON.stringify({ bookingData, userId }),
@@ -92,7 +109,7 @@ export async function healthCheck() {
  * Initialize Razorpay payment with order details
  * This function handles the Razorpay frontend integration
  */
-export function initializeRazorpayPayment(orderData: any): Promise<any> {
+export function initializeRazorpayPayment(orderData: RazorpayOrderData): Promise<RazorpayPaymentResponse> {
   return new Promise((resolve, reject) => {
     // Check if Razorpay is loaded
     if (typeof window === 'undefined' || !window.Razorpay) {
@@ -107,7 +124,7 @@ export function initializeRazorpayPayment(orderData: any): Promise<any> {
       name: orderData.name || 'Himalayan Rides',
       description: orderData.description,
       order_id: orderData.orderId,
-      handler: function (response: any) {
+      handler: function (response: RazorpayPaymentResponse) {
         resolve(response);
       },
       prefill: {
@@ -127,7 +144,7 @@ export function initializeRazorpayPayment(orderData: any): Promise<any> {
     };
 
     const rzp = new window.Razorpay(options);
-    rzp.on('payment.failed', function (response: any) {
+    rzp.on('payment.failed', function (response: { error: { description?: string } }) {
       reject(new Error(response.error.description || 'Payment failed'));
     });
 
@@ -139,7 +156,7 @@ export function initializeRazorpayPayment(orderData: any): Promise<any> {
  * Complete payment flow - from order creation to confirmation
  * This replaces the entire Firebase Functions payment flow
  */
-export async function processPayment(bookingData: any, userId: string) {
+export async function processPayment(bookingData: Partial<Booking>, userId: string) {
   try {
     // Step 1: Create Razorpay order
     console.log('Creating Razorpay order...');
@@ -182,6 +199,6 @@ export async function processPayment(bookingData: any, userId: string) {
 // Type definitions for window.Razorpay
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: typeof import('razorpay');
   }
 }

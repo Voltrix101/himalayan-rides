@@ -1,6 +1,6 @@
 import { memo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Trash2, Calendar, MapPin, Clock } from 'lucide-react';
+import { X, Plus, Trash2, Calendar } from 'lucide-react';
 import { OptimizedGlass } from '../../ui/OptimizedGlass';
 import { Button } from '../../ui/Button';
 import { adminFirebaseService, BikeTour } from '../../../services/adminFirebaseService';
@@ -118,7 +118,7 @@ export const BikeTourForm = memo(({ isOpen, onClose, bikeTour, mode }: BikeTourF
   }, [bikeTour, mode]);
 
   // Handle form input changes
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number | boolean | string[]) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -165,7 +165,7 @@ export const BikeTourForm = memo(({ isOpen, onClose, bikeTour, mode }: BikeTourF
     setItinerary(prev => prev.filter((_, i) => i !== index).map((day, i) => ({ ...day, day: i + 1 })));
   };
 
-  const updateItineraryDay = (index: number, field: string, value: any) => {
+  const updateItineraryDay = (index: number, field: string, value: string | string[]) => {
     setItinerary(prev => prev.map((day, i) => 
       i === index ? { ...day, [field]: value } : day
     ));
