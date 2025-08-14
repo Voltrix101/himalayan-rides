@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, CreditCard, Mountain, AlertCircle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Button } from '../ui/Button';
- import { razorpayService, type BookingData, type RazorpayPaymentData } from '../../services/razorpayService';
+ import { type BookingData, type RazorpayPaymentData } from '../../services/razorpayService';
 import { processPayment } from '../../services/vercelApiService';
 import UniversalModal from '../ui/UniversalModal';
 

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage } from '../../../config/firebase';
-import { Button } from '../../ui/Button';
 
 interface ImageUploaderProps {
   onUploaded: (url: string) => void;

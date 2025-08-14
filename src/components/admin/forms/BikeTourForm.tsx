@@ -1,6 +1,6 @@
 import { memo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Trash2, Calendar, MapPin, Clock } from 'lucide-react';
+import { X, Plus, Trash2, Calendar } from 'lucide-react';
 import { OptimizedGlass } from '../../ui/OptimizedGlass';
 import { Button } from '../../ui/Button';
 import { adminFirebaseService, BikeTour } from '../../../services/adminFirebaseService';
